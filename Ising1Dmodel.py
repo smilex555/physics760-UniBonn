@@ -16,7 +16,7 @@ def energy_ising(spins):
     return energy
 
 
-def delta_energy_ising(spins,random_spin):
+def delta_energy_ising(spins,random_spin,N):
     #If you do flip one random spin, the change in energy is:
     #(By using a reduced formula that only involves the spin
     # and its neighbours)
@@ -47,7 +47,7 @@ def metropolis(N=20, MC_samples=1000, Temperature = 1, interaction = 1, field = 
             #Choosing a random spin
             random_spin=np.random.randint(0,N,size=(1))
             #Computing the change in energy of this spin flip
-            delta=delta_energy_ising(spins,random_spin)
+            delta=delta_energy_ising(spins,random_spin,N)
 
             #Metropolis accept-rejection:
             if delta<0:
@@ -73,27 +73,45 @@ def metropolis(N=20, MC_samples=1000, Temperature = 1, interaction = 1, field = 
     # calculate the average magnetization per spin after all samples
     aver_magnetization = sum(magnetization)/MC_samples
         
-    return  aver_magnetization, energy
+    return  aver_magnetization #, energy
     
 
 
 # setting important parameter
-N = 15 # size of lattice
-MC_samples = 1000 # number of samples
+N = 15 # size of lattice 
+#MC_samples = int((2**N)) # number of samples / ensamble of possible spin configuration
 T = 1 # "temperature" parameter
 J = 1 # Strength of interaction between nearest neighbours
 h = 0 # external field
 
 # running MCMC
-data = metropolis(N = N, MC_samples = MC_samples, Temperature = T, interaction = J, field = h)
+#data = metropolis(N = N, MC_samples = MC_samples, Temperature = T, interaction = J, field = h)
+#print("average_magnetization:",data)
+#print("hello")
 
-print("average_magnetization:",data[0])
+
+# compute magnatization for variable number of spins N
+N_L = np.arange(1,N+1) # array with all used N = 1,...,N_max
+mag = [] # save the average magnetization per spin for each N  
+for i in range(N):
+    n = i+1
+    MC_samples = int(2**n)
+    print(n, MC_samples)
+    m = metropolis(N = n, MC_samples = MC_samples, Temperature = T, interaction = J, field = h)
+    #print(m)
+    mag.append(m)
+     
+    
+   
+# Plotting
+plt.figure(figsize=(10,5))
+plt.plot(N_L,mag)
+plt.ylabel('magnetization',fontdict={'size':20})
+plt.xlabel('size of Lattice N',fontdict={'size':20})
+plt.show()
 
 
 '''
-# Plotting
-plt.figure(figsize=(20,10))
-
 plt.subplot(2,1,2)
 plt.plot(data[],'r')
 plt.xlim((0,MC_samples))
