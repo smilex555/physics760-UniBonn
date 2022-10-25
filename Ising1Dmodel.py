@@ -37,7 +37,7 @@ def metropolis(N=20, MC_samples=1000, Temperature = 1, interaction = 1, field = 
     #Spin Configuration
     spins = np.random.choice([-1,1],N)
         
-    # Using Metropolis Algorithim
+    # Using Metropolis-Hastings Algorithim
     data = []
     magnetization=[]
     energy=[]
@@ -68,57 +68,62 @@ def metropolis(N=20, MC_samples=1000, Temperature = 1, interaction = 1, field = 
 
         #Afer the MC step, we compute magnetization per spin and energy for a spin-configuration
         magnetization.append(sum(spins)/N)
-        energy.append(energy_ising(spins,field))
+        #energy.append(energy_ising(spins,field))
     
     # calculate the average magnetization per spin after all samples
     average_magnetization = sum(magnetization)/MC_samples    
-    return  average_magnetization #, energy
+    # estimate std error 
+    mag_std_err = np.std(magnetization, ddof=1)/np.sqrt(MC_samples)
+ 
+    return  average_magnetization, mag_std_err
     
 
 
 # setting important parameter
-N = 15 # size of lattice 
-MC_samples = int((2**N)) # number of samples / ensamble of possible spin configuration
+N = 20 # size of lattice 
+MC_samples = 10000 #int(2**N) # number of samples / ensamble of possible spin configuration
 T = 1 # "temperature" parameter
 J = 1 # Strength of interaction between nearest neighbours
 h = 0 # external field
 
 # running MCMC
-#data = metropolis(N = N, MC_samples = MC_samples, Temperature = T, interaction = J, field = h)
-#print("average_magnetization:",data)
 
 # compute magnatization for variable number of spins N for fixed external field h
 N_L = np.arange(1,N+1) # array with all used N = 1,...,N_max
 mag_N = [] #to save the average magnetization per spin for each N  
+mag_N_err = []
 for i in range(N):
     n = i+1
-    MC_samples = int(2**n)
+    #MC_samples = int(2**n)
     print(n, MC_samples)
     m = metropolis(N = n, MC_samples = MC_samples, Temperature = T, interaction = J, field = h)
-    #print(m)
-    mag_N.append(m)
+    mag_N.append(m[0])
+    mag_N_err.append(m[1])
 
 # now variate the external field h for fixed number of spin N 
-N = 15
-MC_samples = int(2**N)
+N = 10
+MC_samples = 10000 # int(2**N)
 num_h = 20   #quantity of h
 mag_h = [] #to save average magnetization per spin for each field h
+mag_h_err =[]
 h_L = np.linspace(-1,1,num_h) # variation of h between -1 and 1
 
 for i in h_L:
     m = metropolis(N = N, MC_samples = MC_samples, Temperature = T, interaction = J, field = i)
-    mag_h.append(m)
-    
+    mag_h.append(m[0])
+    mag_h_err.append(m[1])
+
+#print(mag_h_err)
 
 # Plotting
 plt.figure(figsize=(10,5))
 
-plt.plot(N_L,mag_N)
-plt.ylabel('magnetization m',fontdict={'size':20})
-plt.xlabel('size of Lattice N',fontdict={'size':20})
+plt.errorbar(N_L,mag_N,mag_N_err,ecolor='red')
+plt.ylabel('magnetization m',fontdict={'size':10})
+plt.xlabel('size of Lattice N',fontdict={'size':10})
 plt.show()
 
-plt.plot(h_L,mag_h)
-plt.ylabel('magnetization m',fontdict={'size':20})
-plt.xlabel('external field h',fontdict={'size':20})
+plt.errorbar(h_L,mag_h,mag_h_err,ecolor='red')
+plt.ylabel('magnetization m',fontdict={'size':10})
+plt.xlabel('external field h',fontdict={'size':10})
 plt.show()

@@ -59,11 +59,11 @@ for i in h_exact:
 plt.figure(figsize=(10,5))
 
 plt.plot(N_exact, mag_N_exact)
-plt.ylabel('magnetization m',fontdict={'size':20})
-plt.xlabel('size of Lattice N',fontdict={'size':20})
+plt.ylabel('magnetization m',fontdict={'size':10})
+plt.xlabel('size of Lattice N',fontdict={'size':10})
 plt.show()
 
 plt.plot(h_exact, mag_h_exact)
-plt.ylabel('magnetization m',fontdict={'size':20})
-plt.xlabel('external field h',fontdict={'size':20})
+plt.ylabel('magnetization m',fontdict={'size':10})
+plt.xlabel('external field h',fontdict={'size':10})
 plt.show()   
