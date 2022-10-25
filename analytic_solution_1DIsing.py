@@ -25,8 +25,8 @@ N = 20
                
 
 def mag_exact(N,J,T,h):
-    return np.sinh(h/T)*( (np.sqrt(np.sinh(h/T)**2 + np.exp(-J/T)) + np.cosh(h/T))**N - (np.cosh(h/T) - np.sqrt(np.sinh(h/T)**2 + np.exp(-J/T)))**N ) \
- /( np.sqrt(np.sinh(h/T)**2 + np.exp(-J/T))* ((np.sqrt(np.sinh(h/T)**2 + np.exp(-J/T)) + np.cosh(h/T))**N + (np.cosh(h/T) - np.sqrt(np.sinh(h/T)**2 + np.exp(-J/T)))**N ) ) 
+    return T*np.sinh(h/T)*( (np.sqrt(np.sinh(h/T)**2 + np.exp(-4*J/T)) + np.cosh(h/T))**N - (np.cosh(h/T) - np.sqrt(np.sinh(h/T)**2 + np.exp(-4*J/T)))**N ) \
+ /( np.sqrt(np.sinh(h/T)**2 + np.exp(-4*J/T))* ((np.sqrt(np.sinh(h/T)**2 + np.exp(-4*J/T)) + np.cosh(h/T))**N + (np.cosh(h/T) - np.sqrt(np.sinh(h/T)**2 + np.exp(-4*J/T)))**N ) ) 
                
 
 # for fixed h and variation of N
