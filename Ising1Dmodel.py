@@ -77,7 +77,7 @@ def metropolis(N=20, MC_samples=1000, Temperature = 1, interaction = 1, field = 
 
 
 # setting important parameter
-N = 1 # size of lattice 
+N = 15 # size of lattice 
 MC_samples = int((2**N)) # number of samples / ensamble of possible spin configuration
 T = 1 # "temperature" parameter
 J = 1 # Strength of interaction between nearest neighbours
@@ -99,9 +99,9 @@ for i in range(N):
     mag_N.append(m)
 
 # now variate the external field h for fixed number of spin N 
-N = 12
+N = 15
 MC_samples = int(2**N)
-num_h = 30   #quantity of h
+num_h = 20   #quantity of h
 mag_h = [] #to save average magnetization per spin for each field h
 h_L = np.linspace(-1,1,num_h) # variation of h between -1 and 1
 
@@ -109,14 +109,6 @@ for i in h_L:
     m = metropolis(N = N, MC_samples = MC_samples, Temperature = T, interaction = J, field = i)
     mag_h.append(m)
     
-
-# analytical solution for magnatization per spin m
-def lambda_plus(J,T,h):
-    return np.exp(J/T) * (np.cosh(h/T) + np.sqrt(np.sinh(h/T)**2+np.exp(-4*J/T)))
-
-def lambda_minus(J,T,h):    
-    return np.exp(J/T) * (np.cosh(h/T) - np.sqrt(np.sinh(h/T)**2+np.exp(-4*J/T)))
-
 
 # Plotting
 plt.figure(figsize=(10,5))

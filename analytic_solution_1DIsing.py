@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy as sp
 
-# define few important parameters
+# define few start parameters
 J = 1
 T = 1
 h = 0
@@ -25,8 +25,8 @@ N = 20
                
 
 def mag_exact(N,J,T,h):
-    return N*np.sinh(h/T)*( (np.sqrt(np.sinh(h/T)**2 + np.exp(-J/T)) + np.cosh(h/T))**N - (np.cosh(h/T) - np.sqrt(np.sinh(h/T)**2 + np.exp(-J/T)))**N ) \
- /( T*np.sqrt(np.sinh(h/T)**2 + np.exp(-J/T))* ((np.sqrt(np.sinh(h/T)**2 + np.exp(-J/T)) + np.cosh(h/T))**N + (np.cosh(h/T) - np.sqrt(np.sinh(h/T)**2 + np.exp(-J/T)))**N ) ) 
+    return np.sinh(h/T)*( (np.sqrt(np.sinh(h/T)**2 + np.exp(-J/T)) + np.cosh(h/T))**N - (np.cosh(h/T) - np.sqrt(np.sinh(h/T)**2 + np.exp(-J/T)))**N ) \
+ /( np.sqrt(np.sinh(h/T)**2 + np.exp(-J/T))* ((np.sqrt(np.sinh(h/T)**2 + np.exp(-J/T)) + np.cosh(h/T))**N + (np.cosh(h/T) - np.sqrt(np.sinh(h/T)**2 + np.exp(-J/T)))**N ) ) 
                
 
 # for fixed h and variation of N
@@ -40,7 +40,7 @@ for i in range(N):
 #print(mag_N_exact[4])    
 
 # for fixed N and varation of h 
-N = 1
+N = 10
 num_h = 50
 h_exact = np.linspace(-1,1,num_h) # variation of h between -1 and 1
 mag_h_exact = []
