@@ -1,6 +1,6 @@
 """
 @author: smilex
-This is a standalone code!
+THIS IS A STANDALONE CODE!
 """
 
 #libraries
