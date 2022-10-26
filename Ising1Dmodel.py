@@ -92,6 +92,7 @@ h = 0 # external field
 N_L = np.arange(1,N+1) # array with all used N = 1,...,N_max
 mag_N = [] #to save the average magnetization per spin for each N  
 mag_N_err = []
+
 for i in range(N):
     n = i+1
     #MC_samples = int(2**n)
@@ -102,28 +103,61 @@ for i in range(N):
 
 # now variate the external field h for fixed number of spin N 
 N = 10
-MC_samples = 10000 # int(2**N)
-num_h = 20   #quantity of h
+MC_samples = 5000 # int(2**N)
+num_h = 30   #quantity of h
 mag_h = [] #to save average magnetization per spin for each field h
 mag_h_err =[]
 h_L = np.linspace(-1,1,num_h) # variation of h between -1 and 1
 
 for i in h_L:
+    print(i)
     m = metropolis(N = N, MC_samples = MC_samples, Temperature = T, interaction = J, field = i)
     mag_h.append(m[0])
     mag_h_err.append(m[1])
 
 #print(mag_h_err)
 
+
+# analytical solution
+def mag_exact(N,J,T,h):
+    return T*np.sinh(h/T)*( (np.sqrt(np.sinh(h/T)**2 + np.exp(-4*J/T)) + np.cosh(h/T))**N - (np.cosh(h/T) - np.sqrt(np.sinh(h/T)**2 + np.exp(-4*J/T)))**N ) \
+ /( np.sqrt(np.sinh(h/T)**2 + np.exp(-4*J/T))* ((np.sqrt(np.sinh(h/T)**2 + np.exp(-4*J/T)) + np.cosh(h/T))**N + (np.cosh(h/T) - np.sqrt(np.sinh(h/T)**2 + np.exp(-4*J/T)))**N ) ) 
+               
+# for fixed N and varation of h 
+N = 10
+num_h = 50
+h_exact = np.linspace(-1,1,num_h) # variation of h between -1 and 1
+mag_h_exact = []
+
+for i in h_exact:
+    #print(i)
+    mag_anal = mag_exact(N, J, T, i)
+    #print(mag_anal)
+    mag_h_exact.append(mag_anal)
+
+# analytical solution for infinite(very high) N
+N = 700
+mag_h_exact_inf = []
+for i in h_exact:
+    #print(i)
+    mag_anal = mag_exact(N, J, T, i)
+    #print(mag_anal)
+    mag_h_exact_inf.append(mag_anal)
+
+
 # Plotting
 plt.figure(figsize=(10,5))
 
-plt.errorbar(N_L,mag_N,mag_N_err,ecolor='red')
+plt.errorbar(N_L,mag_N,mag_N_err,ecolor='red', label='h=0')
 plt.ylabel('magnetization m',fontdict={'size':10})
 plt.xlabel('size of Lattice N',fontdict={'size':10})
+plt.legend()
 plt.show()
 
-plt.errorbar(h_L,mag_h,mag_h_err,ecolor='red')
+plt.errorbar(h_L,mag_h,mag_h_err,ecolor='red', label='N=10 (numerical)')
+plt.plot(h_exact, mag_h_exact, label='N=10 (analytical)')
+plt.plot(h_exact, mag_h_exact_inf, label='N ->$ \infty $ (analytical)')
 plt.ylabel('magnetization m',fontdict={'size':10})
 plt.xlabel('external field h',fontdict={'size':10})
+plt.legend(loc='upper left')
 plt.show()
