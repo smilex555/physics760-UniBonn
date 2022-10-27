@@ -12,6 +12,7 @@
 \section{Simulation of the 1D Ising Model}
 \begin{enumerate}
     \item $J$ is the interaction coefficient, and determines the strength of interaction between two adjacent lattice points. It's apparent from the Hamiltonian that $J = 0$ corresponds to a system in which there's no interaction between different points in the lattice. In such cases, the Hamiltonian has only one possible non-zero contribution, which is from the energy due to the external field. Further, $J>0$ corresponds to ferromagnets, where the spins desire to be aligned (neighbouring spins have same signs). And, $J<0$ corresponds to antiferromagnets, where the spins desire to anti-aligned (neighbouring spins have opposite signs).
+    \item There are two different types of boundary conditions that can be imposed on the system, \textit{free} and \textit{periodic}. In free boundary condition, the spins at the boundary of the system interact only with the nearest interior spins. Whereas, in the periodic boundary condition, they also interact with the spins topologically next to them, as if the system had a modulo N labelling for the spins. For example, in the 1D Ising model, we get terms like $-J\sigma_1\sigma_N$ in the Hamiltonian, which is absent in the free boundary condition.
 \end{enumerate}
 
 \end{document}
