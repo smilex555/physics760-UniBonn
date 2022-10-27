@@ -17,8 +17,9 @@ ext = np.linspace(-1., 1., 50) #equally spaced values between -1 and 1 for the e
 #N = 5 #fixed N - removed in final push
 N = np.array([1, 5, 10, 20]) #considering 4 different values for N
 Ninf = 500 #large N limit for the analytical calculation
-#important remark: larger values of Ninf (even Ninf = 1000) results in NaN values for magnetisation.
+#important remark: larges values of Ninf (even Ninf = 1000) results in NaN values for magnetisation.
 #this needs to be investigated!
+Ndep = np.arange(1, 21)
 
 #functions
 def ham(spins, h = 0):
@@ -69,9 +70,20 @@ for j in range(len(N)):
 maginf = np.zeros([len(ext)])
 for i in range(len(ext)):
     maginf[i] = mag_exact(Ninf, ext[i])
+    
+#magnetisation - N dependence
+magN = np.zeros([len(Ndep)])
+hNdep = 1 #set h value for this case
+for j in range(len(Ndep)):
+    spinstates = np.array([list(i) for i in itertools.product([-1, 1], repeat=Ndep[j])])
+    avgspin = np.sum(spinstates, axis = 1)/Ndep[j]
+    energy = ham(spinstates, hNdep)
+    probability = np.exp(-1*energy/T)/partition(energy)
+    magN[j] = np.sum(avgspin*probability)
 
-#plots
+#---PLOTS---
 #analytical results
+#magnetisation vs. external magnetic field
 for i in range(len(N)):
     plt.plot(ext, mag2[i], label=f'N={N[i]}')
     plt.legend()
@@ -81,6 +93,7 @@ plt.title('Magnetisation (Analytical) vs. External magnetic field')
 plt.show()
 
 #numerical results
+#magnetisation vs. external magnetic field
 for i in range(len(N)):
     plt.plot(ext, mag[i], label=f'N={N[i]}')
     plt.legend()
@@ -89,4 +102,14 @@ plt.legend()
 plt.xlabel('Externel magnetic field')
 plt.ylabel('Magnetisation')
 plt.title('Magnetisation (Numerical) vs. External magnetic field')
+plt.show()
+
+#magnetisation vs. lattice size
+plt.plot(Ndep, magN, 'o', label=f'h={hNdep}')
+plt.legend()
+plt.xlabel('Lattice size')
+plt.xticks(range(0,21))
+plt.ylabel('Magnetisation')
+plt.title('Magnetisation (Numerical) vs. External magnetic field')
+plt.grid()
 plt.show()
