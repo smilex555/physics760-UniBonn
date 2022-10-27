@@ -77,6 +77,14 @@ for i in range(len(ext)):
 #--------------------------------------------------
 
 #--------------------------------------------------
+#errors
+print('Magnetisaion vs. External magnetic field --- Errors')
+for i in range(len(N)):
+    error = np.abs(np.mean((mag[i]-mag2[i])/mag2[i]))*100
+    print(f'N={N[i]}: {np.round(error, 3)}%')
+#--------------------------------------------------
+
+#--------------------------------------------------
 #magnetisation - N dependence
 magN = np.zeros([len(Ndep)])
 hNdep = 1 #set h value for N dependence - both numerical and analytical results
@@ -91,6 +99,14 @@ for j in range(len(Ndep)):
 magN2 = np.zeros([len(Ndep)])
 for j in range(len(Ndep)):
     magN2[j] = mag_exact(Ndep[j], hNdep)
+#--------------------------------------------------
+
+#--------------------------------------------------
+#errors
+print('Magnetisaion vs. Lattic size --- Errors')
+for i in range(len(Ndep)):
+    error = np.abs(np.mean((magN[i]-magN2[i])/magN2[i]))*100
+    print(f'N={Ndep[i]}: {np.round(error, 3)}%')
 #--------------------------------------------------
 
 #--------------------------------------------------
