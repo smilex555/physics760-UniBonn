@@ -17,7 +17,7 @@ ext = np.linspace(-1., 1., 50) #equally spaced values between -1 and 1 for the e
 #N = 5 #fixed N - removed in final push
 N = np.array([1, 5, 10, 20]) #considering 4 different values for N
 Ninf = 500 #large N limit for the analytical calculation
-#important remark: larges values of Ninf (even Ninf = 1000) results in NaN values for magnetisation.
+#important remark: larger values of Ninf (even Ninf = 1000) results in NaN values for magnetisation.
 #this needs to be investigated!
 
 #functions
