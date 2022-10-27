@@ -8,6 +8,7 @@ import numpy as np
 import itertools
 import matplotlib.pyplot as plt
 
+#--------------------------------------------------
 #parameters
 J = 1
 T = 1
@@ -20,7 +21,9 @@ Ninf = 500 #large N limit for the analytical calculation
 #important remark: larges values of Ninf (even Ninf = 1000) results in NaN values for magnetisation.
 #this needs to be investigated!
 Ndep = np.arange(1, 21)
+#--------------------------------------------------
 
+#--------------------------------------------------
 #functions
 def ham(spins, h = 0):
     """"Given all possible spin states,
@@ -41,8 +44,9 @@ def mag_exact(N, h):
     courtesy: Dongjin"""
     return T*np.sinh(h/T)*( (np.sqrt(np.sinh(h/T)**2 + np.exp(-4*J/T)) + np.cosh(h/T))**N - (np.cosh(h/T) - np.sqrt(np.sinh(h/T)**2 + np.exp(-4*J/T)))**N ) \
  /( np.sqrt(np.sinh(h/T)**2 + np.exp(-4*J/T))* ((np.sqrt(np.sinh(h/T)**2 + np.exp(-4*J/T)) + np.cosh(h/T))**N + (np.cosh(h/T) - np.sqrt(np.sinh(h/T)**2 + np.exp(-4*J/T)))**N ) ) 
+#--------------------------------------------------
 
-
+#--------------------------------------------------
 #magnetisation - numerical calculations
 mag = np.zeros([len(N), len(ext)]) #create a zero matrix to store magnetisation values
 for j in range(len(N)):
@@ -70,10 +74,12 @@ for j in range(len(N)):
 maginf = np.zeros([len(ext)])
 for i in range(len(ext)):
     maginf[i] = mag_exact(Ninf, ext[i])
-    
+#--------------------------------------------------
+
+#--------------------------------------------------
 #magnetisation - N dependence
 magN = np.zeros([len(Ndep)])
-hNdep = 1 #set h value for this case
+hNdep = 1 #set h value for N dependence - both numerical and analytical results
 for j in range(len(Ndep)):
     spinstates = np.array([list(i) for i in itertools.product([-1, 1], repeat=Ndep[j])])
     avgspin = np.sum(spinstates, axis = 1)/Ndep[j]
@@ -81,6 +87,13 @@ for j in range(len(Ndep)):
     probability = np.exp(-1*energy/T)/partition(energy)
     magN[j] = np.sum(avgspin*probability)
 
+#magnetisation - N dependence analytical
+magN2 = np.zeros([len(Ndep)])
+for j in range(len(Ndep)):
+    magN2[j] = mag_exact(Ndep[j], hNdep)
+#--------------------------------------------------
+
+#--------------------------------------------------
 #---PLOTS---
 #analytical results
 #magnetisation vs. external magnetic field
@@ -90,6 +103,16 @@ for i in range(len(N)):
 plt.xlabel('Externel magnetic field')
 plt.ylabel('Magnetisation')
 plt.title('Magnetisation (Analytical) vs. External magnetic field')
+plt.show()
+
+#magnetisation vs. lattice size
+plt.plot(Ndep, magN2, 'o', label=f'h={hNdep}')
+plt.legend()
+plt.xlabel('Lattice size')
+plt.xticks(range(0,21))
+plt.ylabel('Magnetisation')
+plt.title('Magnetisation (Analytical) vs. External magnetic field')
+plt.grid()
 plt.show()
 
 #numerical results
