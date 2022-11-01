@@ -25,15 +25,13 @@ def initialstate(N):
     return state
 
 
-def metropolis(N=20, MC_samples=1000, Temperature = 1, interaction = 1, field = 0):
+def metropolis(N,MC_samples, Temperature, interaction, field):
     
     # intializing
     #Spin Configuration
-    #spins = np.random.choice([-1,1],N)
-        
-    spin_config = initialstate(N)     
+    spin_config = initialstate(N)
+         
     # Using Metropolis-Hastings Algorithim
-    data = []
     magnetization=[]
     energy=[]
     for m in range(MC_samples):     
@@ -41,7 +39,6 @@ def metropolis(N=20, MC_samples=1000, Temperature = 1, interaction = 1, field = 
             #Each Monte Carlo step consists in N random spin moves
             for j in range(N):
                 #Choosing a random spin
-                ##random_spin=np.random.randint(0,N,size=(1))
                 a = np.random.randint(0, N)
                 b = np.random.randint(0, N)
                 s = spin_config[a,b]
@@ -66,23 +63,28 @@ def metropolis(N=20, MC_samples=1000, Temperature = 1, interaction = 1, field = 
                         s=-s
                 spin_config[a,b] = s        
 
-            #data.append(list(spins))
 
         #Afer the MC step, we compute magnetization per spin and energy for a spin-configuration
-        magnetization.append(sum(map(sum,spin_config))/N**2)
-        energy.append(energy_ising(spin_config,field))
+        magnetization.append(sum(map(sum,spin_config))/(N**2))
+        energy.append(energy_ising(interaction, spin_config, N, field)/(N**2))
     
     # calculate the average magnetization per spin after all samples
-    average_magnetization = sum(magnetization)/MC_samples    
+    average_magnetization = sum(magnetization)/MC_samples 
+    average_energy = sum(energy)/MC_samples   
     # estimate std error 
     mag_std_err = np.std(magnetization, ddof=1)/np.sqrt(MC_samples)
  
-    return  average_magnetization, mag_std_err, energy
+    return  average_magnetization, mag_std_err, average_energy
     
 
 # setting important parameter
-N = 20 # length of a quardratic lattice: N x N -> size of 2d-lattice 
+N = 10 # length of a quardratic lattice: N x N -> size of 2d-lattice 
 MC_samples = 10000 #int(2**N) # number of samples / ensamble of possible spin configuration
 T = 1 # "temperature" parameter
-J = 1 # Strength of interaction between nearest neighbours
+J = 0.3 # Strength of interaction between nearest neighbours
 h = 0 # external field
+
+
+metro = metropolis(N = N, MC_samples = MC_samples, Temperature = T, interaction= J, field = h)
+
+print(metro)
