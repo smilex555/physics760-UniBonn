@@ -38,7 +38,7 @@ def mc_steps(spin_config, N, Temperature):
             
             neighbors = spin_config[(i+1)%N, j] + spin_config[i, (j+1)%N] + spin_config[(i-1)%N, j] + spin_config[(i, (j-1)%N)] 
             #Computing the change in energy of this spin flip
-            delta_E = 2 * neighbors * s
+            delta_E = 2 * neighbors * s * J
                 
             #Metropolis accept-rejection:
             if delta_E<0:
@@ -57,6 +57,7 @@ def mc_steps(spin_config, N, Temperature):
             spin_config[a,b] = s        
 
     return spin_config
+
 
 def metropolis(N, MC_samples, eq_samples, T, J, h):
     magnetization=[]
@@ -87,10 +88,10 @@ def metropolis(N, MC_samples, eq_samples, T, J, h):
 
 # setting important parameter
 N = 10 # length of a quardratic lattice: N x N -> size of 2d-lattice 
-eq_samples = 1000 # num of samples to reach thermal equilibrium 
-MC_samples = 1000 #int(2**N) # number of samples / ensamble of possible spin configuration
+eq_samples = 10000 # num of samples to reach thermal equilibrium 
+MC_samples = 10000 #int(2**N) # number of samples / ensamble of possible spin configuration
 T = 1 # "temperature" parameter
-J = 0.3 # Strength of interaction between nearest neighbours
+J = 0.7 # Strength of interaction between nearest neighbours
 h = 0 # external field
 
 
