@@ -78,23 +78,79 @@ def metropolis(N, MC_samples, eq_samples, T, J, h):
         energy.append(energy_ising(J, spin_config, N, h)/(N**2))
         # calculate the average magnetization per spin after all samples
         average_magnetization = sum(magnetization)/MC_samples 
+        average_mag_abs = sum(np.absolute(magnetization))/MC_samples # absolute magnatization
         average_energy = sum(energy)/MC_samples   # calculate average energy per spin
         # estimate std error 
         mag_std_err = np.std(magnetization, ddof=1)/np.sqrt(MC_samples)
+        abs_mag_err = np.std(np.absolute(magnetization), ddof=1)/np.sqrt(MC_samples)
+        ener_std_err = np.std(energy, ddof=1)/np.sqrt(MC_samples)
     #print(spin_config)
     
-    return  average_magnetization, mag_std_err, average_energy
+    return  average_magnetization, mag_std_err, average_energy, ener_std_err, average_mag_abs, abs_mag_err
     
 
 # setting important parameter
-N = 10 # length of a quardratic lattice: N x N -> size of 2d-lattice 
-eq_samples = 10000 # num of samples to reach thermal equilibrium 
-MC_samples = 10000 #int(2**N) # number of samples / ensamble of possible spin configuration
+N = 10 # length of a quardratic lattice: N_x x N_y -> size of 2d-lattice 
+eq_samples = 5000 # num of samples to reach thermal equilibrium 
+MC_samples = 5000 #int(2**N) # number of samples / ensamble of possible spin configuration
 T = 1 # "temperature" parameter
 J = 0.7 # Strength of interaction between nearest neighbours
 h = 0 # external field
 
 
 metro = metropolis(N, MC_samples, eq_samples, T, J, h)
-
 print(metro)
+
+'''
+# variate the external field h for fixed N and J
+num_h = 20   #quantity of h
+mag_h = [] #to save average magnetization per spin for each field h
+mag_h_err =[]
+h_L = np.linspace(-1,1,num_h) # variation of h between -1 and 1
+
+for i in h_L:
+    #print(i)
+    m = metropolis(N, MC_samples, eq_samples, T, J, i)
+    mag_h.append(m[0])
+    mag_h_err.append(m[1])
+
+#estimate average energy and magnetization as a function of J = [.25, 2]
+num_J = 20 # quantitiy of J
+energy = []
+energy_err = []
+abs_mag_J = []
+abs_mag_J_err =[]
+J_L = np.linspace(0.25,2,num_J)
+
+for i in J_L:
+    m = metropolis(N, MC_samples, eq_samples, T, i, 0)
+    energy.append(m[2])
+    energy_err.append(m[3])
+    abs_mag_J.append(m[4])
+    abs_mag_J_err.append(m[5])
+    
+
+#plotting
+plt.figure(figsize=(10,5))
+
+# mag against external field h with numerical and analytical methods
+plt.errorbar(h_L,mag_h,mag_h_err,ecolor='red', label='N=10 (numerical)')
+plt.ylabel('magnetization m',fontdict={'size':10})
+plt.xlabel('external field h',fontdict={'size':10})
+plt.legend(loc='upper left')
+plt.show()
+
+plt.errorbar(J_L,abs_mag_J,abs_mag_J_err,ecolor='red', label='N=10, h=0 (numerical)')
+#plt.plot(,, label='N=10 (analytical)')
+plt.ylabel('magnetization m',fontdict={'size':10})
+plt.xlabel('interaction J',fontdict={'size':10})
+plt.legend(loc='upper left')
+plt.show()
+
+plt.errorbar(J_L,energy,energy_err,ecolor='red', label='N=10, h=0 (numerical)')
+#plt.plot(, , label='N=10 (analytical)')
+plt.ylabel('energy',fontdict={'size':10})
+plt.xlabel('interaction J',fontdict={'size':10})
+plt.legend(loc='upper left')
+plt.show()
+'''
