@@ -14,9 +14,10 @@ def energy_ising(J,spin_config, N, h):
         for j in range(len(spin_config)):
             S = spin_config[i,j]
             nb = spin_config[(i+1)%N, j] + spin_config[i, (j+1)%N] + spin_config[(i-1)%N, j] + spin_config[i, (j-1)%N]
-            energy += -nb * S * J 
-    energy= energy-h*sum(map(sum, spin_config))
-    return energy
+            energy += -J * nb * S 
+    # because we put h=0
+    #energy= energy-h*sum(map(sum, spin_config))
+    return energy/4
 
 
 def initialstate(N):
@@ -78,7 +79,7 @@ def metropolis(N, MC_samples, eq_samples, T, J, h):
         energy.append(energy_ising(J, spin_config, N, h)/(N**2))
         # calculate the average magnetization per spin after all samples
         average_magnetization = sum(magnetization)/MC_samples 
-        average_mag_abs = sum(np.absolute(magnetization))/MC_samples # absolute magnatization
+        average_mag_abs = sum(np.absolute(magnetization))/MC_samples # average absolute magnatization per spin
         average_energy = sum(energy)/MC_samples   # calculate average energy per spin
         # estimate std error 
         mag_std_err = np.std(magnetization, ddof=1)/np.sqrt(MC_samples)
@@ -94,8 +95,8 @@ N = 10 # length of a quardratic lattice: N_x x N_y -> size of 2d-lattice
 eq_samples = 5000 # num of samples to reach thermal equilibrium 
 MC_samples = 5000 #int(2**N) # number of samples / ensamble of possible spin configuration
 T = 1 # "temperature" parameter
-#J = 0.8 # Strength of interaction between nearest neighbours
-#h = 0 # external field
+#J = 2 # Strength of interaction between nearest neighbours
+h = 0 # external field
 
 
 #metro = metropolis(N, MC_samples, eq_samples, T, J, h)

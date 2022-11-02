@@ -22,7 +22,7 @@ def e(J,m):
     return - J * mp.coth(2*J) * ( 1 + (2/np.pi)*(2*np.tanh(2*J)**2 - 1)*K(m)*(4*mp.sech(2*J)**2 * np.tanh(2*J)**2) )   
     
 
-J_len = np.linspace(0.25,2,50)
+J_len = np.linspace(0.25,2,20) # variation of J between 0.25 and 2
 energy = np.zeros(len(J_len))
 mag = np.zeros(len(J_len))
 # loop over J and calculate energy and abs_magnetization
@@ -34,14 +34,14 @@ for i in range(len(J_len)):
     
 plt.figure()
 plt.plot(J_len, energy)
-plt.legend()
+#plt.legend()
 plt.xlabel('Interaction J')
 plt.ylabel('Energy per site')
 #plt.title('')
 plt.show()
 
 plt.plot(J_len, mag)
-plt.legend()
+#plt.legend()
 plt.xlabel('Interaction J')
 plt.ylabel('Energy per site')
 plt.show()    
