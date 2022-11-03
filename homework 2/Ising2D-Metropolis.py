@@ -10,7 +10,8 @@ def probability_dist(Hamiltonian, Temperature):
 
 # calculate Hamiltonian of Ising model
 # spins: configuration of spins per chain
-def energy_ising(J,spin_config, N, h):
+'''
+def energy_ising(J, spin_config, N, h):
     energy=0
     for i in range(len(spin_config)):
         for j in range(len(spin_config)):
@@ -19,7 +20,7 @@ def energy_ising(J,spin_config, N, h):
             energy += -J * nb * S 
     # because we put h=0 for energy calculation the h-term is not neccesary
     #energy= energy-h*sum(map(sum, spin_config))
-    return energy
+    return energy/4
 
 
 def initialstate(N):
