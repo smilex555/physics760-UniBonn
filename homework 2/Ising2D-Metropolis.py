@@ -42,7 +42,6 @@ def Hamiltonian(a,b, spin_config, s):
      
 
 def mc_steps(spin_config, N, Temperature, J, h):
-    
     # Using Metropolis-Hastings Algorithim      
     for i in range(N):
         #Each Monte Carlo step consists in N random spin moves
