@@ -22,7 +22,8 @@ def energy_ising(J, spin_config, N, h):
     #energy= energy-h*sum(map(sum, spin_config))
     return energy/4
 '''
-def energy_ising(J, spin_config, h):
+#this modified function doesn't need N as an argument, but still has it to work with legacy function calls
+def energy_ising(J, spin_config, N, h):
     left = np.roll(spin_config, 1, 1)
     right = np.roll(spin_config, -1, 1)
     up = np.roll(spin_config, 1, 0)
@@ -36,11 +37,6 @@ def initialstate(N):
     return state
 
 #print(initialstate(10))
-
-def Hamiltonian(a,b, spin_config, s):
-    s = spin_config[a,b]
-     
-
 def mc_steps(spin_config, N, Temperature, J, h):
     # Using Metropolis-Hastings Algorithim      
     for i in range(N):
