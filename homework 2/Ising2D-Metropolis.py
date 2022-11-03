@@ -11,20 +11,20 @@ def probability_dist(Hamiltonian, Temperature):
 # calculate Hamiltonian of Ising model
 # spins: configuration of spins per chain
 
-'''
+
 def energy_ising(J, spin_config, N, h):
     energy=0
     for i in range(len(spin_config)):
         for j in range(len(spin_config)):
             S = spin_config[i,j]
-            nb = spin_config[(i+1)%N, j] + spin_config[i, (j+1)%N]# + spin_config[(i-1)%N, j] + spin_config[i, (j-1)%N]
-            energy += -J * nb * S 
+            nb = spin_config[(i+1)%N, j] + spin_config[i, (j+1)%N] + spin_config[(i-1)%N, j] + spin_config[i, (j-1)%N]
+            energy += -J * nb * S - h*sum(map(sum, spin_config))
     # because we put h=0 for energy calculation the h-term is not neccesary
     #energy= energy-h*sum(map(sum, spin_config))
     return energy/4
 
-'''
 
+'''
 #@Dongjin: the below function is more efficient since it doesn't use any loops.
 #timeit shows the below function is at least 3 times more faster for N = 10
 #and at least 10 times faster for N = 20
@@ -34,9 +34,9 @@ def energy_ising(J, spin_config, h):
     right = np.roll(spin_config, -1, 1)
     up = np.roll(spin_config, 1, 0)
     down = np.roll(spin_config, -1, 0)
-    energy = (1/2)*-J*np.sum(spin_config*(left + right + up +down))
+    energy = (1/4)*-J*np.sum(spin_config*(left + right + up +down))- h*sum(map(sum, spin_config))
     return energy
-
+'''
 def initialstate(N):
     # Generates a random spin configuration for initial condition 
     state = 2*np.random.randint(2, size=(N,N))-1
@@ -44,7 +44,11 @@ def initialstate(N):
 
 #print(initialstate(10))
 
-def mc_steps(spin_config, N, Temperature, J):
+def Hamiltonian(a,b, spin_config, s):
+    s = spin_config[a,b]
+     
+
+def mc_steps(spin_config, N, Temperature, J, h):
     
     # Using Metropolis-Hastings Algorithim      
     for i in range(N):
@@ -55,9 +59,16 @@ def mc_steps(spin_config, N, Temperature, J):
             b = np.random.randint(0, N)
             s = spin_config[a,b]
             #spin of the neighbors
-            neighbors = spin_config[(i+1)%N, j] + spin_config[i, (j+1)%N] #+ spin_config[(i-1)%N, j] + spin_config[(i, (j-1)%N)] 
+            neighbors = spin_config[(i+1)%N, j] + spin_config[i, (j+1)%N] + spin_config[(i-1)%N, j] + spin_config[(i, (j-1)%N)] 
             #Computing the change in energy of this spin flip
-            delta_E = 2 * neighbors * s * J
+            H_old = -J*neighbors*(s) - h*sum(map(sum, spin_config))
+            spin_config[a,b] = -s             
+            
+            H_new = -J*neighbors*(-s) - h*sum(map(sum, spin_config))
+            
+            delta_E = H_new - H_old 
+            spin_config[a,b] = s
+            #delta_E = ( -J*neighbors*(-s) - h*sum(map(sum, spin_config)) ) - ( -J*neighbors*s - h*sum(map(sum, spin_config)) )  
                 
             #Metropolis accept-rejection:
             if delta_E<0:
@@ -87,17 +98,17 @@ def metropolis(N, MC_samples, eq_samples, T, J, h):
     #print(spin_config)
     #just loop to update the lattice wthout storing the data until thermal equilibrium 
     for i in range(eq_samples):
-        mc_steps(spin_config=spin_config_, N = N, Temperature = T, J=J)
+        mc_steps(spin_config=spin_config_, N = N, Temperature = T, J=J, h=h)
     # now save the spin config of the updated lattice
     #print(spin_config)    
     for i in range(MC_samples):
         for _ in range(10):
-            mc_steps(spin_config=spin_config_, N = N, Temperature = T, J=J)
-        mc_steps(spin_config=spin_config_, N = N, Temperature = T, J=J)
+            mc_steps(spin_config=spin_config_, N = N, Temperature = T, J=J, h=h)
+        mc_steps(spin_config=spin_config_, N = N, Temperature = T, J=J, h=h)
         #Afer the MC step, we compute magnetization and energy per spin for a spin-configuration
         #magnetization.append(sum(map(sum,spin_config))/(N**2))
         magnetization.append(np.mean(spin_config_))
-        energy.append(energy_ising(J, spin_config_, N, h)/(N**2))
+        energy.append(energy_ising(J, spin_config_,N, h)/(N**2))
         #energy.append() 
     # calculate the average magnetization per spin after all samples
     average_magnetization = sum(magnetization)/MC_samples 
@@ -139,7 +150,7 @@ for i in h_L:
 
 
 #estimate average energy and magnetization as a function of J = [.25, 2]
-num_J = 1 # quantitiy of J
+num_J = 10 # quantitiy of J
 av_energy = []
 av_energy_err = []
 abs_mag_J = []
@@ -191,7 +202,7 @@ plt.figure(figsize=(10,5))
 
 
 # mag against external field h with numerical and analytical methods
-plt.errorbar(h_L,mag_h,mag_h_err,ecolor='red', label='N=10, J=0.7 (numerical)')
+plt.errorbar(h_L,mag_h,mag_h_err,ecolor='red', label='N=5, J=0.2 (numerical)')
 plt.ylabel('magnetization m',fontdict={'size':10})
 plt.xlabel('external field h',fontdict={'size':10})
 plt.legend(loc='upper left')
