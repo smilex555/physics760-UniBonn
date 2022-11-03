@@ -43,7 +43,7 @@ plt.show()
 plt.plot(J_len, mag)
 #plt.legend()
 plt.xlabel('Interaction J')
-plt.ylabel('Energy per site')
+plt.ylabel('magnetization per site')
 plt.show()    
     
     
