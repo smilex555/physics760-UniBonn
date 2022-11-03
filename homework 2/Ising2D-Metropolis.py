@@ -114,7 +114,7 @@ def metropolis(N, MC_samples, eq_samples, T, J, h):
 # setting important parameter
 N = 5 # length of a quardratic lattice: N_x x N_y -> size of 2d-lattice 
 eq_samples = 1000 # num of samples to reach thermal equilibrium 
-MC_samples = 1000 #int(2**N) # number of samples / ensamble of possible spin configuration
+MC_samples = 1000 #int(2**N) # number of samples / ensemble of possible spin configuration
 T = 1 # "temperature" parameter
 J = 0.2 # Strength of interaction between nearest neighbours
 #h = 0 # external field
@@ -125,7 +125,7 @@ J = 0.2 # Strength of interaction between nearest neighbours
 
 
 # variate the external field h for fixed N and J
-num_h = 10   #quantity of h
+num_h = 10 #quantity of h
 mag_h = [] #to save average magnetization per spin for each field h
 mag_h_err =[]
 h_L = np.linspace(-1,1,num_h) # variation of h between -1 and 1
