@@ -41,7 +41,6 @@ def initialstate(N):
 
 
 def mc_steps(spin_config, N, Temperature, J):
-         
     # Using Metropolis-Hastings Algorithim      
     for i in range(N):
         #Each Monte Carlo step consists in N random spin moves
