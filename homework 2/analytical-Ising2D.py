@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from mpmath import *
+from mpmath import mp
 import scipy as sp
 from scipy import special
 
