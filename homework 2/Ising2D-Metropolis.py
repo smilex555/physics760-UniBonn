@@ -36,9 +36,8 @@ def initialstate(N):
     state = 2*np.random.randint(2, size=(N,N))-1
     return state
 
-#print(initialstate(10))
 def mc_steps(spin_config, N, Temperature, J, h):
-    # Using Metropolis-Hastings Algorithim      
+    # Using Metropolis-Hastings Algorithm      
     for i in range(N):
         #Each Monte Carlo step consists in N random spin moves
         for j in range(N):
@@ -47,15 +46,14 @@ def mc_steps(spin_config, N, Temperature, J, h):
             b = np.random.randint(0, N)
             s = spin_config[a,b]
             #spin of the neighbors
-            neighbors = spin_config[(i+1)%N, j] + spin_config[i, (j+1)%N] + spin_config[(i-1)%N, j] + spin_config[(i, (j-1)%N)] 
+            neighbors = spin_config[(a+1)%N, b] + spin_config[a, (b+1)%N] + spin_config[(a-1)%N, b] + spin_config[(a, (b-1)%N)] 
             #Computing the change in energy of this spin flip
+            # calculate old energy before and new energy after spin flip
             H_old = -J*neighbors*(s) - h*sum(map(sum, spin_config))
-            spin_config[a,b] = -s             
-            
+            spin_config[a,b] = -s  # flip the spin to calculate the whole energy           
             H_new = -J*neighbors*(-s) - h*sum(map(sum, spin_config))
-            
             delta_E = H_new - H_old 
-            spin_config[a,b] = s
+            spin_config[a,b] = s # flip the spin back after calculate delta_E
             #delta_E = ( -J*neighbors*(-s) - h*sum(map(sum, spin_config)) ) - ( -J*neighbors*s - h*sum(map(sum, spin_config)) )  
                 
             #Metropolis accept-rejection:
@@ -83,7 +81,6 @@ def metropolis(N, MC_samples, eq_samples, T, J, h):
     # intializing
     #Spin Configuration
     spin_config_ = initialstate(N)
-    #print(spin_config)
     #just loop to update the lattice wthout storing the data until thermal equilibrium 
     for i in range(eq_samples):
         mc_steps(spin_config=spin_config_, N = N, Temperature = T, J=J, h=h)
@@ -97,7 +94,6 @@ def metropolis(N, MC_samples, eq_samples, T, J, h):
         #magnetization.append(sum(map(sum,spin_config))/(N**2))
         magnetization.append(np.mean(spin_config_))
         energy.append(energy_ising(J, spin_config_,N, h)/(N**2))
-        #energy.append() 
     # calculate the average magnetization per spin after all samples
     average_magnetization = sum(magnetization)/MC_samples 
     average_mag_abs = sum(np.absolute(magnetization))/MC_samples # average absolute magnatization per spin
@@ -114,11 +110,10 @@ def metropolis(N, MC_samples, eq_samples, T, J, h):
 # setting important parameter
 N = 5 # length of a quardratic lattice: N_x x N_y -> size of 2d-lattice 
 eq_samples = 1000 # num of samples to reach thermal equilibrium 
-MC_samples = 1000 #int(2**N) # number of samples / ensemble of possible spin configuration
+MC_samples = 1000 # number of samples / ensemble of possible spin configuration
 T = 1 # "temperature" parameter
 J = 0.2 # Strength of interaction between nearest neighbours
 #h = 0 # external field
-
 
 #metro = metropolis(N, MC_samples, eq_samples, T, J, h)
 #print(metro)
@@ -155,7 +150,6 @@ for i in J_L:
     print(m)
 
 
-
 #analytic solution
 # critcal coupling J_c
 J_c = (1/2) * np.log(1 + np.sqrt(2))
@@ -166,7 +160,8 @@ def abs_mag(J):
         return (1 - (1/np.sinh(2*J)**4))**(1/8)
     else:
         return 0
-
+    
+# complete elliptic integral of the first kind
 def K(m):
     return special.ellipk(m)
 
@@ -174,7 +169,6 @@ def K(m):
 def e(J,m):
     return - J * mp.coth(2*J) * ( 1 + (2/np.pi)*(2*np.tanh(2*J)**2 - 1)*K(m)*(4*mp.sech(2*J)**2 * np.tanh(2*J)**2) )   
     
-
 #J_L = np.linspace(0.25,2,20) # variation of J between 0.25 and 2
 energy_anal = np.zeros(len(J_L))
 mag = np.zeros(len(J_L))
@@ -187,7 +181,6 @@ for i in range(len(J_L)):
 
 #plotting
 plt.figure(figsize=(10,5))
-
 
 # mag against external field h with numerical and analytical methods
 plt.errorbar(h_L,mag_h,mag_h_err,ecolor='red', label='N=5, J=0.2 (numerical)')
