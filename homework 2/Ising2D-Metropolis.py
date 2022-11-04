@@ -31,10 +31,12 @@ def energy_ising(J, spin_config, N, h):
     energy = (1/4)*-J*np.sum(spin_config*(left + right + up +down)) - h*np.sum(spin_config)
     return energy
 
+
 def initialstate(N):
     # Generates a random spin configuration for initial condition 
     state = 2*np.random.randint(2, size=(N,N))-1
     return state
+
 
 def mc_steps(spin_config, N, Temperature, J, h):
     # Using Metropolis-Hastings Algorithm      
@@ -108,7 +110,7 @@ def metropolis(N, MC_samples, eq_samples, T, J, h):
     
 
 # setting important parameter
-N = 5 # length of a quardratic lattice: N_x x N_y -> size of 2d-lattice 
+N = 10 # length of a quardratic lattice: N_x x N_y -> size of 2d-lattice 
 eq_samples = 1000 # num of samples to reach thermal equilibrium 
 MC_samples = 1000 # number of samples / ensemble of possible spin configuration
 T = 1 # "temperature" parameter
@@ -138,7 +140,7 @@ av_energy = []
 av_energy_err = []
 abs_mag_J = []
 abs_mag_J_err =[]
-J_L = np.linspace(0.25,2,num_J)
+J_L = np.linspace(0.25,1,num_J)
 
 for i in J_L:
     print(i)
@@ -147,7 +149,7 @@ for i in J_L:
     av_energy_err.append(m[3])
     abs_mag_J.append(m[4])
     abs_mag_J_err.append(m[5])
-    print(m)
+    #print(m)
 
 
 #analytic solution
@@ -191,14 +193,14 @@ plt.show()
 
 
 plt.errorbar(J_L[:],abs_mag_J[:],abs_mag_J_err[:],ecolor='red', label='N=10, h=0 (numerical)')
-plt.plot(J_L, mag, label='N=10, h=0 (analytical)')
+plt.plot(J_L, mag, label='(analytical)')
 plt.ylabel('absolute magnetization m',fontdict={'size':10})
 plt.xlabel('interaction J',fontdict={'size':10})
 plt.legend(loc='upper left')
 plt.show()
 
 plt.errorbar(J_L,av_energy,av_energy_err,ecolor='red', label='N=10, h=0 (numerical)')
-plt.plot(J_L, energy_anal,label = 'N=0, h=0 (analytical)')
+plt.plot(J_L, energy_anal,label = '(analytical)')
 plt.ylabel('energy',fontdict={'size':10})
 plt.xlabel('interaction J',fontdict={'size':10})
 plt.legend(loc='upper left')
