@@ -11,7 +11,7 @@
 \maketitle
 
 \section{Simulating the 2-D Ising Model}
-In this homework, we implemented the \verb|Metropolis-Hastings| algorithm to simulate the 2D Ising Model. The calculation of total energy of a particular configuration is much more efficient in our implementation, due to the possibility of manipulating $numpy$ arrays. Fig \ref{fig:energy-calc} shows the evaluation times for arbitrary configurations with $N = 1, 2, ..., 20$, timed using \verb|timeit| on \verb|Python|. We see that the evaluation time grows only very weakly with $N$. This is due to the efficiency of $numpy$ manipulations.\\
+In this homework, we implemented the \verb|Metropolis-Hastings| algorithm to simulate the 2D Ising Model. The calculation of total energy of a particular configuration is much more efficient in our implementation, due to the possibility of manipulating $numpy$ arrays. Figure \ref{fig:energy-calc} shows the evaluation times for arbitrary configurations with $N = 1, 2, ..., 20$, timed using \verb|timeit| on \verb|Python|. We see that the evaluation time grows only very weakly with $N$. This is due to the efficiency of $numpy$ manipulations.\\
 \begin{figure}[h!]
     \centering
     \includegraphics[width=.9\textwidth]{energy-calc.png}
@@ -19,14 +19,37 @@ In this homework, we implemented the \verb|Metropolis-Hastings| algorithm to sim
     \label{fig:energy-calc}
 \end{figure}
 Similarly, calculations of energy before and after a spin flip shows a similar trend, as can be seen from the code. However, this step is implemented inside a $for-loop$, which makes it grow roughly quadratically with the number of lattice points. This step is at the heart of the \verb|Metropolis-Hastings| algorithm.\\
-The critical coupling, $J_c$, gives the value of the coupling beyond which spontaneous magnetisation takes place for a given non-zero external magnetic field. This is an example of a phase transition, whose universality across different physical systems has been well studied. This can be seen from figure \ref{fig:mag-int-analy}. The value of $J_c$ is about $0.44$.\\
+The critical coupling, $J_c$, gives the value of the coupling beyond which spontaneous magnetisation takes place for a given non-zero external magnetic field. This is an example of a phase transition, whose universality across different physical systems has been well studied. This can be seen from figure \ref{fig:mag-int-analy}. The value of $J_c$ is about $0.44$. Figure \ref{fig:energy-int-analy} shows the analytical result for energy vs. coupling factor.\\
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=.9\textwidth]{mag-int-analy.png}
+    \includegraphics[width=.6\textwidth]{mag-int-analy.png}
     \caption{Analytical result for Magnetisation vs. Coupling factor}
     \label{fig:mag-int-analy}
 \end{figure}
-
-
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=.6\textwidth]{energy-int-analy.png}
+    \caption{Analytical result for Energy vs. Coupling factor}
+    \label{fig:energy-int-analy}
+\end{figure}
+Figure \ref{fig:mag-h} shows magnetisation vs. external magnetic field for a fixed value of $J$. Figure \ref{fig:mag-int} shows the numerical result for magnetisation vs. coupling factor and figure \ref{fig:enrgy-int} shows the numerical result for energy vs. coupling factor. As can be seen, unfortunately we were unable to simulate the expected phase transitions in our numerical simulations. We are actively trying to understand what went wrong with our simulations, and hopefully we are able to fix it in the near future. Our best guess at this point is that we are overlooking some trivial mistake in the implementation of the algorithm. To the question what would happen if we plot $\langle m \rangle$, instead of $\langle \vert m \vert \rangle$, we would no longer observe any phase transition in that case.
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=.6\textwidth]{mag-h.png}
+    \caption{Magnetisation vs. External field for a given coupling factor}
+    \label{fig:mag-h}
+\end{figure}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=.6\textwidth]{mag-int.png}
+    \caption{Magnetisation vs. Coupling factor (Simulation)}
+    \label{fig:mag-int}
+\end{figure}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=.6\textwidth]{energy-int.png}
+    \caption{Energy vs. Coupling factor (Simulation)}
+    \label{fig:enrgy-int}
+\end{figure}
 
 \end{document}
