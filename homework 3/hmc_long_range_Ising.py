@@ -71,7 +71,9 @@ def magnetization_obs(phi, h):
 
 def energy_obs(phi, N, h, J):
     beta = 1.
-    return -( np.power(phi,2)/(2*N*J*np.power(beta,2)) ) - h*np.tanh(beta*h + phi)
+    return -(2*N*h*J*np.power(beta,2)*np.tanh(beta*h + phi) - J*beta + np.power(phi,2)) / (N*2*J*np.power(beta,2))
+    
+    #return -( np.power(phi,2)/(2*N*J*np.power(beta,2)) ) - h*np.tanh(beta*h + phi)
 
 
 phi0 = 1 # starting initial phi
@@ -96,11 +98,15 @@ for m,n in enumerate(N):
         x = HMC_alg(phi0,j,h,n,nmd,N_samples,N_burn)
         phi_mc = x[0]
         accept_rate[m,i] = x[1]
-        print(n,j,x[1])
+        print(n,j,x[1]) # show acceptence rate
+        
+        #if i == 0:
+        #    print(phi_mc[:30])
 
         magnet[m,i,:] = magnetization_obs(phi_mc, h)
         energy[m,i,:] = energy_obs(phi_mc,n,h,j)
-        
+        #if i == 5:
+        #    print(energy[m,i,:30])
 
 # Use bootstrap method to calculate the errors
 
