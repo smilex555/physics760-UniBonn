@@ -33,6 +33,7 @@ def HMC_alg(phi0,J,h,N,nmd,N_samples,N_burn):
     mu = 0
     sig = 1
     phi = phi0
+    # burning some MC steps to get thermal equilibrium
     for i in range(N_burn):
         p0 = np.random.normal(mu, sig)
         p_leap, phi_leap = leapfrog(p0, phi, nmd, N, J, h)
@@ -51,7 +52,7 @@ def HMC_alg(phi0,J,h,N,nmd,N_samples,N_burn):
         p_leap, phi_leap = leapfrog(p0, phi, nmd, N, J, h)
         H_old = hamlf(p0, phi, N, J, h)
         H_new = hamlf(p_leap,phi_leap, N, J, h)
-        delta_E = H_old - H_new
+        delta_E = H_new - H_old
         random=np.random.rand()
         #Metropolis accept-rejection:
         if random < np.exp(-delta_E):
@@ -78,15 +79,16 @@ def energy_obs(phi, N, h, J):
 
 phi0 = 1 # starting initial phi
 h = 0.5
-J = np.arange(0.2,2,0.1)
+J = np.arange(0.1,2.0,0.05)
 N = np.array([5,10,15])   # number of sites 
-nmd = 5
+nmd = 10
 N_samples = 10000
 N_burn = 1000
 
 
 len_N = len(N)
 len_J = len(J)
+print(len_J)
 accept_rate = np.zeros((len_N,len_J))
 #phi_mc = np.zeros( len_N,len_J, N_samples)
 energy = np.zeros( (len_N,len_J, N_samples))
@@ -98,7 +100,7 @@ for m,n in enumerate(N):
         x = HMC_alg(phi0,j,h,n,nmd,N_samples,N_burn)
         phi_mc = x[0]
         accept_rate[m,i] = x[1]
-        print(n,j,x[1]) # show acceptence rate
+        #print(n,j,x[1]) # show acceptence rate
         
         #if i == 0:
         #    print(phi_mc[:30])
@@ -107,6 +109,7 @@ for m,n in enumerate(N):
         energy[m,i,:] = energy_obs(phi_mc,n,h,j)
         #if i == 5:
         #    print(energy[m,i,:30])
+
 
 # Use bootstrap method to calculate the errors
 
