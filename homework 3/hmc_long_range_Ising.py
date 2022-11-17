@@ -66,21 +66,21 @@ def HMC_alg(phi0,J,h,N,nmd,N_samples,N_burn):
 
 
 def magnetization_obs(phi, h):
-    beta = 1
-    return np.tanh(beta*h+phi)
+    beta = 1.
+    return np.tanh(beta*h + phi)
 
 def energy_obs(phi, N, h, J):
-    beta = 1
-    return - np.power(phi,2)/(2*N*J*np.power(beta,2)) - h*np.tanh(beta*h + phi)
+    beta = 1.
+    return -( np.power(phi,2)/(2*N*J*np.power(beta,2)) ) - h*np.tanh(beta*h + phi)
 
 
 phi0 = 1 # starting initial phi
 h = 0.5
 J = np.arange(0.2,2,0.1)
-N = [5,10,15]   # number of sites 
+N = np.array([5,10,15])   # number of sites 
 nmd = 5
 N_samples = 10000
-N_burn = 300
+N_burn = 1000
 
 
 len_N = len(N)
