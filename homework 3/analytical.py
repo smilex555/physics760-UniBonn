@@ -30,7 +30,7 @@ def mag(Z, betajn = 1, betah = 1, N = 20):
 
 #function calls
 betajrange = np.linspace(0.2, 2, 100)
-zval = Z(betajrange)
+zval = Z(betajrange, 0.5)
 betaepsval = betaeps(zval, betajrange, 0.5)
 magval = mag(zval, betajrange, 0.5)
 

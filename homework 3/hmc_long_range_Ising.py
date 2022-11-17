@@ -88,7 +88,7 @@ N_burn = 1000
 
 len_N = len(N)
 len_J = len(J)
-print(len_J)
+#print(len_J)
 accept_rate = np.zeros((len_N,len_J))
 #phi_mc = np.zeros( len_N,len_J, N_samples)
 energy = np.zeros( (len_N,len_J, N_samples))
@@ -100,7 +100,7 @@ for m,n in enumerate(N):
         x = HMC_alg(phi0,j,h,n,nmd,N_samples,N_burn)
         phi_mc = x[0]
         accept_rate[m,i] = x[1]
-        #print(n,j,x[1]) # show acceptence rate
+        print(n,j,x[1]) # show acceptence rate
         
         #if i == 0:
         #    print(phi_mc[:30])
