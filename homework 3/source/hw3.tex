@@ -60,6 +60,16 @@ Z[J > 0] &= \int_{-\infty}^{\infty} \frac{d\phi}{\sqrt{2\pi \beta J}} \mathrm{e}
 \implies \dot{p} &= -\frac{\phi}{\beta\hat{J}} + N\tanh{(\beta h + \phi)}&
 \end{flalign*}
 
+\item{Implementation of Leapfrog algorithm}
+
+The leapfrog algorithm was implemented and the following plot, \ref{fig:lf_conv}, was obtained to verify the given convergence rate of the algorithm.
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width = .8\linewidth]{leapfrog_conv.png}
+    \caption{Relative error in the energy vs. MD steps}
+    \label{fig:lf_conv}
+\end{figure}
+
 \end{enumerate}
 
 \end{document}
