@@ -36,7 +36,7 @@ for i in range(nmdtotal):
     p2, phi2 = leapfrog(p, phi, mpik, fk, deltafk, i+1)
     H_new[i] = ham(p2, phi2, mpik, fk, deltafk)
 
-xrange = np.arange(100) + 1
+xrange = np.arange(nmdtotal) + 1
 yval = np.abs((H_new - H_old)/H_old)
 
 # plotting
