@@ -28,8 +28,8 @@ if __name__ == "__main__":
     fk = np.array([960., 1025., 1055., 1085., 1130.])
     deltafk = np.array([25., 20., 15., 10., 8.])
 
-    p, phi = np.array([1., 1., 1.]), np.array([800., 800., 600.]) #fixed init values
-    # p, phi = np.array([np.random.rand(), np.random.rand(), np.random.rand()]), np.array([np.random.rand(), np.random.rand(), np.random.rand()]) #random init values
+    # p, phi = np.array([1., 1., 1.]), np.array([800., 800., 600.]) #fixed init values
+    p, phi = np.array([np.random.rand(), np.random.rand(), np.random.rand()]), np.array([np.random.rand(), np.random.rand(), np.random.rand()]) #random init values
     H_old = ham(p, phi, mpik, fk, deltafk) # energy of the init configuration
     nmdtotal = 100 # NMD steps max value
     H_new = np.zeros(nmdtotal) # array to store the energies of the final config
