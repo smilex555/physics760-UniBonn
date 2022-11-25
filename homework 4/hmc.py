@@ -33,7 +33,6 @@ def HMC(phi0, hmcmpik, hmcfk, hmcdeltafk, hmcnmd, hmcn_samples, hmcn_burn, tau, 
     phi_all2 = np.zeros((hmcn_samples))
     phi = phi0.copy()
     for _ in range(hmcn_burn):
-        #p0 = np.random.normal(1, 0)
         p0 = np.array([np.random.normal(0,1), np.random.normal(0,1), np.random.normal(0,1)])
         p_leap, phi_leap = leapfrog(p0, phi, hmcmpik, hmcfk, hmcdeltafk, hmcnmd, tau, beta)
         H_old = ham(p0, phi, hmcmpik, hmcfk, hmcdeltafk, beta)
@@ -45,10 +44,7 @@ def HMC(phi0, hmcmpik, hmcfk, hmcdeltafk, hmcnmd, hmcn_samples, hmcn_burn, tau, 
             phi = phi
 
     for i in range(hmcn_samples):
-        #p0 = np.random.normal(1, 0)
         p0 = np.array([np.random.normal(0,1), np.random.normal(0,1), np.random.normal(0,1)])
-        #p0 = np.array([np.random.rand(), np.random.rand(), np.random.rand()])
-        #p0 = np.array([1., 1., 1.])
         #print(p0)
         #print(phi)
         p_leap, phi_leap = leapfrog(p0, phi, hmcmpik, hmcfk, hmcdeltafk, hmcnmd, tau, beta)
@@ -57,7 +53,7 @@ def HMC(phi0, hmcmpik, hmcfk, hmcdeltafk, hmcnmd, hmcn_samples, hmcn_burn, tau, 
         #print(H_old)
         H_new = ham(p_leap, phi_leap, hmcmpik, hmcfk, hmcdeltafk, beta)
         #print(H_new)
-        delta_E = np.abs((H_new - H_old))
+        delta_E = H_new - H_old
         #print(delta_E)
         if np.random.rand() < np.exp(-delta_E):
             phi = phi_leap
@@ -90,17 +86,11 @@ hmc_trajectory = np.arange(0, N_samples, 1)
 
 #calculate the average values of phi_i and their std in Markov chain,
 # which is the best fit values and its fit error
-#aver_phi0 = np.mean(phi_hmc[0])
-#aver_phi1 = np.mean(phi_hmc[1])
-#aver_phi2 = np.mean(phi_hmc[2])
+
 average_phi = np.array([np.mean(phi_hmc[0]),np.mean(phi_hmc[1]),np.mean(phi_hmc[2])])
 
-#std_phi0 = np.std(phi_hmc[0])
-#std_phi1 = np.std(phi_hmc[1])
-#std_phi2 = np.std(phi_hmc[2])
 std_phi = np.array([np.std(phi_hmc[0]),np.std(phi_hmc[1]),np.std(phi_hmc[2])])
 
-print(average_phi)
 
 # calculate fit function values with average phi values 
 fit_data = fitfun(mpik, average_phi)
