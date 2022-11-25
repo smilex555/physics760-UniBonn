@@ -90,11 +90,21 @@ hmc_trajectory = np.arange(0, N_samples, 1)
 
 #calculate the average values of phi_i and their std in Markov chain,
 # which is the best fit values and its fit error
-average_phi = np.mean(phi_hmc)
-std_phi0 = np.std(phi_hmc)
+#aver_phi0 = np.mean(phi_hmc[0])
+#aver_phi1 = np.mean(phi_hmc[1])
+#aver_phi2 = np.mean(phi_hmc[2])
+average_phi = np.array([np.mean(phi_hmc[0]),np.mean(phi_hmc[1]),np.mean(phi_hmc[2])])
+
+#std_phi0 = np.std(phi_hmc[0])
+#std_phi1 = np.std(phi_hmc[1])
+#std_phi2 = np.std(phi_hmc[2])
+std_phi = np.array([np.std(phi_hmc[0]),np.std(phi_hmc[1]),np.std(phi_hmc[2])])
+
+print(average_phi)
 
 # calculate fit function values with average phi values 
-phi_fit_data = fitfun(mpik, average_phi)
+fit_data = fitfun(mpik, average_phi)
+fit_error_data = np.sqrt( (std_phi[0])**2 + (mpik*std_phi[1])**2 + ((mpik**2)*std_phi[2])**2 ) 
 
 plt.figure(figsize=(10,7.5))
 
@@ -109,7 +119,7 @@ plt.show()
 
 
 plt.errorbar(mpik, fk, deltafk, fmt='.', capthick=1, label='neutron mass data')
-plt.errorbar(mpik, phi_fit_data, 0, fmt='.', capthick=1, label='neutron mass fit')
+plt.errorbar(mpik, fit_data, fit_error_data, fmt='.', capthick=1, label='neutron mass fit')
 plt.xlabel('pion mass [GeV]')
 plt.ylabel('neutron mass [MeV]')
 plt.grid()
