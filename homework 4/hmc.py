@@ -79,8 +79,8 @@ phidata = np.array([800., 800., 600.])
 
 nmd = 20
 Tau = 1
-N_samples = 100000
-N_burn = 10000
+N_samples = 1000000
+N_burn = 100000
 
 
 phi_hmc = HMC(phidata, mpik, fk, deltafk, nmd, N_samples, N_burn, Tau)
@@ -91,11 +91,10 @@ hmc_trajectory = np.arange(0, N_samples, 1)
 #calculate the average values of phi_i and their std in Markov chain,
 # which is the best fit values and its fit error
 average_phi = np.mean(phi_hmc)
-
-phi_fit_data = fitfun(mpik, average_phi)
-
 std_phi0 = np.std(phi_hmc)
 
+# calculate fit function values with average phi values 
+phi_fit_data = fitfun(mpik, average_phi)
 
 plt.figure(figsize=(10,7.5))
 
@@ -111,8 +110,8 @@ plt.show()
 
 plt.errorbar(mpik, fk, deltafk, fmt='.', capthick=1, label='neutron mass data')
 plt.errorbar(mpik, phi_fit_data, 0, fmt='.', capthick=1, label='neutron mass fit')
-plt.xlabel('pion mass')
-plt.ylabel('neutron mass')
+plt.xlabel('pion mass [GeV]')
+plt.ylabel('neutron mass [MeV]')
 plt.grid()
 plt.legend()
 plt.show()
