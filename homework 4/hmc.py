@@ -131,5 +131,5 @@ plt.show()
 
 print('Best fit values: ', fit_data)
 print('Best fit values(Error): ', fit_error_data)
-print('Neutron mass = ', fitfun(0.134977, np.array([phi_hmc[0], phi_hmc[1], phi_hmc[2]]))*1000)
-print('Neutron mass(Chiral Limit) = ', phi_hmc[0])
+print('Neutron mass = ', fitfun(0.134977, np.array([phi_hmc[0, -1], phi_hmc[1, -1], phi_hmc[2, -1]])))
+print('Neutron mass(Chiral Limit) = ', phi_hmc[0, -1])
