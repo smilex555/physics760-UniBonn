@@ -48,7 +48,7 @@ def HMC_alg(phi0,nmd,tau,N_samples,N_burn):
 def auto_corr_func(mc,mean,N,t):
     mc_sum = 0
     for i in range(N-t):
-        mc_sum += (mc[i+1]-mean)*(mc[int(i+1+t)]-mean)    
+        mc_sum += (mc[i]-mean)*(mc[int(i+t)]-mean)    
     return (1/(N-t)) * np.sum(mc_sum) 
 
 #define the normalized autocorrelation function
@@ -71,37 +71,39 @@ def integrated_time(gam_0, gam_t):
 phi0 = 1
 nmd = 3
 Tau = .1
-N_config = 100000
+N_config = 1000000
 N_burn = 10000
 
 m_chain, accept_rate = HMC_alg(phi0, nmd, Tau, N_config, N_burn)
+print(np.mean(m_chain))
+print(accept_rate)
 
 #####
 plt.figure()
-plt.plot(m_chain,'.', label='phi_2')
+plt.plot(m_chain,'-')
 plt.xlabel('HMC tajectory')
 plt.ylabel('O($\Phi$)')
 plt.grid()
-plt.legend()
 plt.show()
 #####
 
 
 # put every autocorrelation steps together 
-def auto_correlation(m_chain):
+def auto_correlation(mc_data):
     # the estimated mean value of the simulated markov_chain
-    est_mean = np.mean(m_chain)
+    est_mean = np.mean(mc_data)
 
     gamma_sum = 0 # the sum term of tau_int equation
     Gamma_t = [] # save the autocorrelation function for different t
     w = 0
-    for t in range(len(m_chain)):
-        g_t = Gamma_func(m_chain, est_mean, len(m_chain), t)
+    for t in tqdm(range(len(mc_data))):
+        g_t = Gamma_func(mc_data, est_mean, len(mc_data), t)
         gamma_sum += g_t 
-        Gamma_t[t] = g_t 
+        Gamma_t.append(g_t) 
         w+=1
-        if g_t >= 0:
+        if g_t <= 0:
             break
+    
     Gamma_0 = Gamma_func(m_chain, est_mean, len(m_chain), 0)    
     gamma_sum -= Gamma_0
     tau_int = 0.5*Gamma_0 + gamma_sum
@@ -109,20 +111,22 @@ def auto_correlation(m_chain):
     return Gamma_t, w, tau_int 
 
 ###
+'''
 Gamma, W, tau_int = auto_correlation(m_chain)
 
-markov_time = np.arange(1,W,1)
+markov_time = np.arange(0,W,1)
+print('W='+str(W), len(Gamma),len(markov_time))
 
 plt.figure()
-plt.plot(markov_time, Gamma, '.', label='hmc')
-plt.plot(markov_time, Gamma_func_2(markov_time,tau_int), '.', label='hmc')
+plt.plot(markov_time, Gamma, '.', label='gamma function')
+plt.plot(markov_time, Gamma_func_2(markov_time,tau_int), '.', label='exp-function with tau_int')
 plt.xlabel('markov chain time t')
 plt.ylabel(' autocorrelation $\Gamma$(t)')
-plt.label()
+plt.legend()
 plt.grid()
 plt.show()
 ###
-
+'''
 
 # Blocking / Binning the markov chain data
 def blocking(mc_data, bin_width):
@@ -141,29 +145,33 @@ def blocking(mc_data, bin_width):
     
     return mean_block    
 
+'''
 ###
 # Demonstrate that the autocorrelation decreases as the bin width is increased
-autocorr = []
-for i in range([1,2,4,10,20]):
+#autocorr = []
+for i in [1,2,4,10,20]:
     mc_block = blocking(m_chain,i)
-    autocorr[i] = auto_correlation(mc_block)
-    plt.plot(autocorr[i], '.', label='bin width='+str(i))
+    #print(len(m_chain))
+    print(len(mc_block))
+    x = auto_correlation(mc_block)
+    print(len(x[0]))
+    #autocorr.append(x[0])
+    plt.plot(x[0], '.', label='bin width='+str(i))
 
 plt.xlabel('t_mc / N_bin')
 plt.ylabel(' autocorrelation $\Gamma$(t_mc)')
 plt.xscale('log')
 plt.yscale('log')
-plt.label()
+plt.legend()
 plt.show()
 ###
-
+'''
 
 # bootstrap routine
-def bootstrap(data):
-    num_bs = 200
-    mean_bs = np.zeros()
+def bootstrap(data,n_bs):
+    mean_bs = np.zeros(n_bs)
 
-    for i in range(num_bs):
+    for i in range(n_bs):
         N_config = len(data)
         
         # choose new random configuration of the markov chain
@@ -178,19 +186,19 @@ def bootstrap(data):
     return np.mean(mean_bs), np.std(mean_bs)
 
 ###
+num_bs = 200 # number of bootstrap samples
 bs_bin = [1,2,4,8,10,15,20,30] # used bin width
-bs_mean = []
-bs_std = []
+bs_mean = np.zeros(len(bs_bin))
+bs_std = np.zeros(len(bs_bin))
 
-for i in range(bs_bin):
-    mc_block = blocking(m_chain,i)
-    bs_mean[i], bs_std[i] = bootstrap(mc_block)
+for b_i,bin in enumerate(bs_bin):
+    mc_block = blocking(m_chain,bin)
+    bs_mean[b_i], bs_std[b_i] = bootstrap(mc_block, num_bs)
     
 plt.figure()
-plt.errorbar(bs_bin, bs_mean, bs_std, '.', label='estimated mean')
+plt.errorbar(bs_bin, bs_mean, bs_std, fmt='.', capthick=1)
 plt.xlabel('bin width')
-plt.ylabel(' estimated mean of ')
-plt.label()
+plt.ylabel(' estimated mean $\mu$ ')
 plt.show()
 ### 
 
