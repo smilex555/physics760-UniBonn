@@ -8,10 +8,10 @@ def leapfrog(p, phi, nmd, tau = .1):
     fphi += .5*eps*fpi
     # intermediate steps
     for _ in range(nmd - 1):
-        fpi -= eps*2*fphi
+        fpi += eps*(-2)*fphi
         fphi += eps*fpi
     # last step
-    fpi -= eps*2*fphi
+    fpi += eps*(-2)*fphi
     fphi += .5*eps*fpi
     return fpi, fphi
 

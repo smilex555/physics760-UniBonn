@@ -1,7 +1,25 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from leapfrog5 import leapfrog, ham
+#from leapfrog5 import leapfrog, ham
 from tqdm import tqdm # for HMC progress bar
+
+def leapfrog(p, phi, nmd, tau = .1):
+    eps = tau/nmd
+    fpi, fphi = p, phi
+    # first step
+    fphi += .5*eps*fpi
+    # intermediate steps
+    for _ in range(nmd - 1):
+        fpi += eps*(-2)*fphi
+        fphi += eps*fpi
+    # last step
+    fpi -= eps*(-2)*fphi
+    fphi += .5*eps*fpi
+    return fpi, fphi
+
+def ham(p, phi):
+    return 0.5*np.power(p,2) + np.power(phi,2)
+
 
 def HMC_alg(phi0,nmd,tau,N_samples,N_burn):
     #phi = 1
@@ -17,7 +35,7 @@ def HMC_alg(phi0,nmd,tau,N_samples,N_burn):
         H_old = ham(p0, phi)
         H_new = ham(p_leap,phi_leap)
         delta_E = H_old - H_new
-        random=np.random.rand()
+        random=np.random.uniform(0,1)
         #Metropolis accept-rejection:
         if random <= np.exp(delta_E):
             phi = phi_leap
@@ -31,7 +49,7 @@ def HMC_alg(phi0,nmd,tau,N_samples,N_burn):
         H_old = ham(p0, phi)
         H_new = ham(p_leap,phi_leap)
         delta_E = H_old - H_new
-        random=np.random.rand()
+        random=np.random.uniform(0,1)
         #Metropolis accept-rejection:
         if random <= np.exp(delta_E):
             phi = phi_leap
@@ -43,6 +61,9 @@ def HMC_alg(phi0,nmd,tau,N_samples,N_burn):
     
     return phi_all, acceptence/N_samples
 
+# the observable function
+def obs(phi):
+    return np.cos(np.sqrt(1+phi**2))
 
 #define the autocorrelation function
 def auto_corr_func(mc,mean,N,t):
@@ -74,13 +95,14 @@ Tau = .1
 N_config = 1000000
 N_burn = 10000
 
-m_chain, accept_rate = HMC_alg(phi0, nmd, Tau, N_config, N_burn)
-print(np.mean(m_chain))
+mc, accept_rate = HMC_alg(phi0, nmd, Tau, N_config, N_burn)
+observ = obs(mc)
+print(np.mean(observ))
 print(accept_rate)
 
 #####
 plt.figure()
-plt.plot(m_chain,'-')
+plt.plot(observ,'-')
 plt.xlabel('HMC tajectory')
 plt.ylabel('O($\Phi$)')
 plt.grid()
@@ -104,15 +126,15 @@ def auto_correlation(mc_data):
         if g_t <= 0:
             break
     
-    Gamma_0 = Gamma_func(m_chain, est_mean, len(m_chain), 0)    
+    Gamma_0 = Gamma_func(mc_data, est_mean, len(mc_data), 0)    
     gamma_sum -= Gamma_0
     tau_int = 0.5*Gamma_0 + gamma_sum
 
     return Gamma_t, w, tau_int 
 
 ###
-'''
-Gamma, W, tau_int = auto_correlation(m_chain)
+
+Gamma, W, tau_int = auto_correlation(observ)
 
 markov_time = np.arange(0,W,1)
 print('W='+str(W), len(Gamma),len(markov_time))
@@ -126,7 +148,7 @@ plt.legend()
 plt.grid()
 plt.show()
 ###
-'''
+
 
 # Blocking / Binning the markov chain data
 def blocking(mc_data, bin_width):
@@ -145,13 +167,13 @@ def blocking(mc_data, bin_width):
     
     return mean_block    
 
-'''
+
 ###
 # Demonstrate that the autocorrelation decreases as the bin width is increased
 #autocorr = []
 for i in [1,2,4,10,20]:
-    mc_block = blocking(m_chain,i)
-    #print(len(m_chain))
+    mc_block = blocking(observ,i)
+    #print(len(observ))
     print(len(mc_block))
     x = auto_correlation(mc_block)
     print(len(x[0]))
@@ -165,7 +187,8 @@ plt.yscale('log')
 plt.legend()
 plt.show()
 ###
-'''
+
+
 
 # bootstrap routine
 def bootstrap(data,n_bs):
@@ -192,7 +215,7 @@ bs_mean = np.zeros(len(bs_bin))
 bs_std = np.zeros(len(bs_bin))
 
 for b_i,bin in enumerate(bs_bin):
-    mc_block = blocking(m_chain,bin)
+    mc_block = blocking(observ,bin)
     bs_mean[b_i], bs_std[b_i] = bootstrap(mc_block, num_bs)
     
 plt.figure()
