@@ -55,7 +55,7 @@ def auto_corr_func(mc,mean,N,t):
 def Gamma_func(mc,mean,N,t):
     c_t = auto_corr_func(mc,mean,N,t)
     c_0 = auto_corr_func(mc,mean,N,0)
-    return c_t/c_0#, c_t, c_0
+    return c_t/c_0 #, c_t, c_0
 
 #get autocorrelation function with autocorr_time
 def Gamma_func_2(t,tau):
@@ -66,6 +66,7 @@ def Gamma_func_2(t,tau):
 def integrated_time(gam_0, gam_t):
     return 0.5*gam_0 + gam_t
 
+###
 
 phi0 = 1
 nmd = 3
@@ -75,33 +76,52 @@ N_burn = 10000
 
 m_chain, accept_rate = HMC_alg(phi0, nmd, Tau, N_config, N_burn)
 
-# the estimated mean value of the simulated markov_chain
-est_mean = np.mean(m_chain)
+#####
+plt.figure()
+plt.plot(m_chain,'.', label='phi_2')
+plt.xlabel('HMC tajectory')
+plt.ylabel('O($\Phi$)')
+plt.grid()
+plt.legend()
+plt.show()
+#####
 
-#
-Gamma = 0
-Gamma_t = [] # save the autocorrelation function for different t
-W = 0
-for t in range(len(m_chain)):
-    g_t = Gamma_func(m_chain, est_mean, len(m_chain), t+1)
-    Gamma += g_t 
-    Gamma[t] = g_t 
-    W+=1
-    if g_t >= 0:
-        break
 
-Gamma_0 = Gamma_func(m_chain, est_mean, len(m_chain), 0)    
-tau_int = 0.5*Gamma_0 + Gamma
+# put every autocorrelation steps together 
+def auto_correlation(m_chain):
+    # the estimated mean value of the simulated markov_chain
+    est_mean = np.mean(m_chain)
+
+    gamma_sum = 0 # the sum term of tau_int equation
+    Gamma_t = [] # save the autocorrelation function for different t
+    w = 0
+    for t in range(len(m_chain)):
+        g_t = Gamma_func(m_chain, est_mean, len(m_chain), t)
+        gamma_sum += g_t 
+        Gamma_t[t] = g_t 
+        w+=1
+        if g_t >= 0:
+            break
+    Gamma_0 = Gamma_func(m_chain, est_mean, len(m_chain), 0)    
+    gamma_sum -= Gamma_0
+    tau_int = 0.5*Gamma_0 + gamma_sum
+
+    return Gamma_t, w, tau_int 
+
+###
+Gamma, W, tau_int = auto_correlation(m_chain)
+
 markov_time = np.arange(1,W,1)
 
 plt.figure()
-plt.plot(markov_time, Gamma_t, '.', label='hmc')
+plt.plot(markov_time, Gamma, '.', label='hmc')
 plt.plot(markov_time, Gamma_func_2(markov_time,tau_int), '.', label='hmc')
 plt.xlabel('markov chain time t')
 plt.ylabel(' autocorrelation $\Gamma$(t)')
 plt.label()
 plt.grid()
 plt.show()
+###
 
 
 # Blocking / Binning the markov chain data
@@ -121,4 +141,57 @@ def blocking(mc_data, bin_width):
     
     return mean_block    
 
- 
+###
+# Demonstrate that the autocorrelation decreases as the bin width is increased
+autocorr = []
+for i in range([1,2,4,10,20]):
+    mc_block = blocking(m_chain,i)
+    autocorr[i] = auto_correlation(mc_block)
+    plt.plot(autocorr[i], '.', label='bin width='+str(i))
+
+plt.xlabel('t_mc / N_bin')
+plt.ylabel(' autocorrelation $\Gamma$(t_mc)')
+plt.xscale('log')
+plt.yscale('log')
+plt.label()
+plt.show()
+###
+
+
+# bootstrap routine
+def bootstrap(data):
+    num_bs = 200
+    mean_bs = np.zeros()
+
+    for i in range(num_bs):
+        N_config = len(data)
+        
+        # choose new random configuration of the markov chain
+        bs_idx = np.random.randint(0,N_config, size=N_config)
+        
+        # new data configuration with the random drawn indeces 
+        bs_data = data[bs_idx]
+        
+        # mean of the new data config
+        mean_bs[i] = np.mean(bs_data)
+        
+    return np.mean(mean_bs), np.std(mean_bs)
+
+###
+bs_bin = [1,2,4,8,10,15,20,30] # used bin width
+bs_mean = []
+bs_std = []
+
+for i in range(bs_bin):
+    mc_block = blocking(m_chain,i)
+    bs_mean[i], bs_std[i] = bootstrap(mc_block)
+    
+plt.figure()
+plt.errorbar(bs_bin, bs_mean, bs_std, '.', label='estimated mean')
+plt.xlabel('bin width')
+plt.ylabel(' estimated mean of ')
+plt.label()
+plt.show()
+### 
+
+

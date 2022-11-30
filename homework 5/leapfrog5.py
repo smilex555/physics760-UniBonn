@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def leapfrog(p, phi, nmd, tau = 1):
+def leapfrog(p, phi, nmd, tau = .1):
     eps = tau/nmd
     fpi, fphi = p, phi
     # first step
