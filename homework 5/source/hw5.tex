@@ -61,7 +61,14 @@ Modifying the leapfrog integrator to accommodate the new system in-hand, we obta
 
 \clearpage
 \item \textbf{Bootstrap Routine}\\
+Setting the number of bootstrap samples to $200$, the behaviour of the error as a function of bin width is given in figure \ref{fig:meanbin}. We see that the mean is close to the actual mean, whereas the error is far from the actual error. But we also notice that the error seems to increase with increasing bin width. This suggests, chosen sufficiently large bin width, we should be able to get the right value for our error. We were also asked to study the behaviour of the mean and error with different bootstrap sample sizes. But this seemed to be giving something contrary to what we were expecting and not included in the report. The corresponding parts in the code are commented towards the end.
 
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=.8\linewidth]{estimated_mean_error.png}
+    \caption{Estimated Mean vs. Bin Width for Bootstrap Samples = 200}
+    \label{fig:meanbin}
+\end{figure}
 
 \end{enumerate}
 
