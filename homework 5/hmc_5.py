@@ -218,11 +218,30 @@ for b_i,bin in enumerate(bs_bin):
     mc_block = blocking(observ,bin)
     bs_mean[b_i], bs_std[b_i] = bootstrap(mc_block, num_bs)
 
-print(bs_mean, bs_std)
+print('Mean and Std (Different Bin Widths:', bs_mean, bs_std)
+
+#Behaviour of the function as a function of ensemble size --doesn't look right
+"""
+mc_block2 = blocking(observ, 20)
+num_bs2 = np.arange(200, 211, 2)
+bs_mean2 = np.zeros(len(num_bs2))
+bs_std2 = np.zeros(len(num_bs2))
+
+for num_i, num_bsloop in enumerate(num_bs2):
+    bs_mean2[num_i], bs_mean2[num_i] = bootstrap(mc_block2, num_bsloop)
+"""
 
 plt.figure()
 plt.errorbar(bs_bin, bs_mean, bs_std, fmt='.', capthick=1)
 plt.xlabel('bin width')
 plt.ylabel(' estimated mean $\mu$ ')
 plt.show()
+
+"""
+plt.figure()
+plt.errorbar(num_bs2, bs_mean2, bs_std2, fmt='.', capthick=1)
+plt.xlabel('sample size')
+plt.ylabel(' estimated mean $\mu$ ')
+plt.show()
+"""
 ### 
