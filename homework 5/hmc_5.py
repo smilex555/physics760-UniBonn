@@ -217,12 +217,12 @@ bs_std = np.zeros(len(bs_bin))
 for b_i,bin in enumerate(bs_bin):
     mc_block = blocking(observ,bin)
     bs_mean[b_i], bs_std[b_i] = bootstrap(mc_block, num_bs)
-    
+
+print(bs_mean, bs_std)
+
 plt.figure()
 plt.errorbar(bs_bin, bs_mean, bs_std, fmt='.', capthick=1)
 plt.xlabel('bin width')
 plt.ylabel(' estimated mean $\mu$ ')
 plt.show()
 ### 
-
-
