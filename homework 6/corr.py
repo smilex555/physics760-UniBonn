@@ -7,10 +7,18 @@ def initialstate(N):
     state = 2*np.random.randint(2, size=(N,N))-1
     return state
 
-N = 10
+N = 20
+r = 0
 
 teststate = initialstate(N)
 
-fftstate1 = fft(teststate)
-fftstatefreq1 = fftfreq(N, 1/(N**2))
-print(fftstatefreq1)
+fftstate = fft(teststate.flatten())
+fftstatefreq = fftfreq(N*N)
+
+csum = fftstate[0]*fftstate[0]
+for i in range(1, N*N):
+    if(i != (N*N)/2):
+        csum += fftstate[i]*fftstate[(N*N)-i]*np.exp(1j*fftstatefreq[i]*r)
+
+Cr = np.real_if_close((1/(N*N*N*N))*csum)
+print(Cr)
