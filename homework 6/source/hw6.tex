@@ -1,0 +1,28 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{bm}
+
+\title{Computational Physics (physics760)\\Exercise 6}
+\author{Ajay S. Sakthivasan, Dongjin Suh}
+\date{December 9, 2022}
+
+\begin{document}
+
+\maketitle
+
+\begin{enumerate}
+
+\item   \textbf{Correlator Bias}\\
+As discussed in the lecture, the algorithm may not explore all spin configurations for large ($\gg J_c$) value of $J$. The algorithm might settle for one particular spin configuration, either almost all spin-up or almost all spin-down, in which case the correlator will always be close to $1$. This means that there is no bias in the Correlator, since we expect for large values of $J$, the correlation to be close to $1$.
+
+\item \textbf{Correlator ($r = 0$)}\\
+If $r=0$, we are calculating the correlation o each spin site with itself. Since, each spin can either up or down, the product will always be $1$. Dividing by the total number of sites, we get $C_0 = 1$.
+
+
+
+\end{enumerate}
+\end{document}
