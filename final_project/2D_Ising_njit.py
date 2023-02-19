@@ -1,10 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from numba import njit
+from matplotlib.colors import ListedColormap
 from scipy.ndimage import convolve, generate_binary_structure
+from numba import njit
 import time
 from tqdm import tqdm
-from matplotlib.colors import ListedColormap
 
 # function to calculate energy in a flat geometry, i.e.,
 # points on the boundary do not have points from the opposite edges as neighbours
@@ -28,18 +28,27 @@ def energy_toroid(spin_config, J, h):
     energy = -J*0.5*np.sum(spin_config*(left + right + up +down)) - h*np.sum(spin_config)
     return energy
 
-#@njit("UniTuple(f8[:], 2)(f8[:,:], i8, f8, f8, f8, f8, unicode_type)", nogil=True)
-# above line doesn't work when the metropolis function returns the final spin config
-# numba doesn't support type casting 2D arrays (?)
-# but using the above line instead of the one below, speeds up the code in the first function call
+# the first line where the type is asserted explicitly during numba call
+# doesn't work when the metropolis function returns the final spin config
+# numba doesn't support type asserting 2D arrays (???)
+# but using the second line instead of the first, speeds up the code during the first function call
 # there is no difference in the consecutive function calls
+
+#@njit("UniTuple(f8[:], 2)(f8[:,:], i8, f8, f8, f8, f8, unicode_type)", nogil=True)
 @njit(nogil=True)
-def metropolis(spin_config, iterations, J, h, beta, energy, mode='toroid'):
+def metropolis(spin_config, iterations, burnin, J, h, beta, energy, mode='toroid'):
+    '''Metropolis algorithm for a 2D Ising Model.
+    Takes in an initial spin config, no. of iterations and burn-in steps,
+    J, h, beta, energy of the initial spin config and default energy mode as toroidal.
+    Returns net magnetisation, energy vs. algo time steps
+    net magnetisation, energy without burnin vs algo time steps and final spin config'''
     N = len(spin_config)
     spin_config = spin_config.copy()
+    tot_spins_noburnin = np.zeros(iterations + burnin)
+    tot_energy_noburnin = np.zeros(iterations + burnin)
     tot_spins = np.zeros(iterations)
     tot_energy = np.zeros(iterations)
-    for i in range(0, iterations):
+    for i in range(0, iterations + burnin):
         # step 1: pick a random point flip spins
         x = np.random.randint(0,N)
         y = np.random.randint(0,N)
@@ -90,20 +99,27 @@ def metropolis(spin_config, iterations, J, h, beta, energy, mode='toroid'):
             energy += dE
         
         # save the values
-        tot_spins[i] = np.sum(spin_config)
-        tot_energy[i] = energy
+        tot_spins_noburnin[i] = np.sum(spin_config)
+        tot_energy_noburnin[i] = energy
+        if i >= burnin:
+            tot_spins[i - burnin] = np.sum(spin_config)
+            tot_energy[i - burnin] = energy
 
     # return the arrays of total spins and energies over the iterations and the final spin config 
-    return tot_spins, tot_energy, spin_config
+    return tot_spins, tot_energy, tot_spins_noburnin, tot_energy_noburnin, spin_config
 
 
 # init values
 N = 50
-J = 1
-h = 0
-beta = 1
+j = 1.
+h = 0.
+beta = 1.
 iter = 100000
+burn = 30000
 mode = 'toroid' # choose between 'toroid' and 'flat'
+
+# test if everything's working as expected
+# -0-0-0-0-0--0-0-0-0-0--0-0-0-0-0--0-0-0-0-0--0-0-0-0-0-
 
 # create a mostly negative initial config
 init_random = np.random.random((N, N))
@@ -126,39 +142,74 @@ plt.show()
 
 # calculate the total energy of the two spin config
 if mode == 'toroid':
-    energy_n = energy_toroid(lattice_n, J, h)
-    energy_p = energy_toroid(lattice_p, J, h)
+    energy_n = energy_toroid(lattice_n, j, h)
+    energy_p = energy_toroid(lattice_p, j, h)
 if mode == 'flat':
-    energy_n = energy_flat(lattice_n, J, h)
-    energy_p = energy_flat(lattice_p, J, h)
+    energy_n = energy_flat(lattice_n, j, h)
+    energy_p = energy_flat(lattice_p, j, h)
 
 # metropolis algo
 start = time.time()
-spins_n, energies_n, dummy = metropolis(lattice_n, iter, J, h, beta, energy_n, mode)
-spins_p, energies_p, dummy = metropolis(lattice_p, iter, J, h, beta, energy_p, mode)
+spins_n, energies_n, spinsnob_n, energiesnob_n, equi_n = metropolis(lattice_n, iter, burn, j, h, beta, energy_n, mode)
+spins_p, energies_p, spinsnob_p, energiesnob_p, equi_p = metropolis(lattice_p, iter, burn, j, h, beta, energy_p, mode)
 print('Runtime:', np.round(time.time()-start, 2), 's')
 
 # plot the results
+
+# without burn-in
 fig, axes = plt.subplots(1, 2, figsize=(12,4))
 ax = axes[0]
-ax.plot(spins_n/N**2)
-ax.set_xlabel('Algorithm Time Steps')
-ax.set_ylabel(r'Average Spin $\bar{m}$')
+ax.plot(spinsnob_n/(N*N))
+ax.set_xlabel('Algorithm Iteration')
+ax.set_ylabel(r'Net magnetisation $\bar{m}$')
 ax.grid()
 ax = axes[1]
-ax.plot(energies_n)
-ax.set_xlabel('Algorithm Time Steps')
-ax.set_ylabel(r'Energy $E/J$')
+ax.plot(energiesnob_n)
+ax.set_xlabel('Algorithm Iteration')
+ax.set_ylabel(r'Energy $E$')
 ax.grid()
 fig.tight_layout()
-fig.suptitle(r'Evolution of Average Spin and Energy', y=1.07, size=18)
+fig.suptitle(r'Evolution of Net Magnetisation and Energy', y = 1, size=12)
 plt.show()
 
 fig, axes = plt.subplots(1, 2, figsize=(12,4))
 ax = axes[0]
-ax.plot(spins_p/N**2)
+ax.plot(spinsnob_p/(N*N))
+ax.set_xlabel('Algorithm Iteration')
+ax.set_ylabel(r'Net Magnetisation $\bar{m}$')
+ax.grid()
+ax = axes[1]
+ax.plot(energiesnob_p)
 ax.set_xlabel('Algorithm Time Steps')
-ax.set_ylabel(r'Average Spin $\bar{m}$')
+ax.set_ylabel(r'Energy $E/J$')
+ax.grid()
+fig.tight_layout()
+fig.suptitle(r'Evolution of Average Spin and Energy', y=1, size=12)
+plt.show()
+
+# with burn-in
+fig, axes = plt.subplots(1, 2, figsize=(12,4))
+ax = axes[0]
+ax.plot(spins_n/(N*N))
+ax.set_xlabel('Algorithm Iteration')
+ax.set_ylabel(r'Net magnetisation $\bar{m}$')
+ax.set_ylim([-1., 1.])
+ax.grid()
+ax = axes[1]
+ax.plot(energies_n)
+ax.set_xlabel('Algorithm Iteration')
+ax.set_ylabel(r'Energy $E$')
+ax.grid()
+fig.tight_layout()
+fig.suptitle(r'Evolution of Net Magnetisation and Energy', y = 1, size=12)
+plt.show()
+
+fig, axes = plt.subplots(1, 2, figsize=(12,4))
+ax = axes[0]
+ax.plot(spins_p/(N*N))
+ax.set_xlabel('Algorithm Iteration')
+ax.set_ylabel(r'Net Magnetisation $\bar{m}$')
+ax.set_ylim([-1., 1.])
 ax.grid()
 ax = axes[1]
 ax.plot(energies_p)
@@ -166,17 +217,29 @@ ax.set_xlabel('Algorithm Time Steps')
 ax.set_ylabel(r'Energy $E/J$')
 ax.grid()
 fig.tight_layout()
-fig.suptitle(r'Evolution of Average Spin and Energy', y=1.07, size=18)
+fig.suptitle(r'Evolution of Average Spin and Energy', y=1, size=12)
 plt.show()
 
-# phase transition, starting with the equilibrium state for beta = 1 (thermalisation)
-lattice_p = dummy
-beta = np.linspace(0, 1, 50)
-netmag = np.zeros(len(beta))
-for i in tqdm(range(len(netmag))):
-    totspin, totenergy, dummy = metropolis(lattice_p, iter, J, h, beta[i], energy_p, mode)
-    netmag[i] = totspin[-1]/(N*N)
+# -0-0-0-0-0--0-0-0-0-0--0-0-0-0-0--0-0-0-0-0--0-0-0-0-0-
+
+# phase transition
+# -0-0-0-0-0--0-0-0-0-0--0-0-0-0-0--0-0-0-0-0--0-0-0-0-0-
+
+beta = np.linspace(0, 1, 80)
+
+netmag_p = np.zeros(len(beta))
+for i in tqdm(range(len(netmag_p))):
+    totspin, totenergy, totspinnob, totenergynob, dummy = metropolis(lattice_p, iter, burn, j, h, beta[i], energy_p, mode)
+    netmag_p[i] = np.average(totspin)/(N*N)
+
+netmag_n = np.zeros(len(beta))
+for i in tqdm(range(len(netmag_n))):
+    totspin, totenergy, totspinnob, totenergynob, dummy = metropolis(lattice_p, iter, burn, j, h, beta[i], energy_p, mode)
+    netmag_n[i] = np.average(totspin)/(N*N)
 
 #plot the results
-plt.plot(beta, netmag, '.')
+plt.plot(beta, netmag_p, '.')
 plt.show()
+plt.plot(beta, netmag_n, '.')
+plt.show()
+# -0-0-0-0-0--0-0-0-0-0--0-0-0-0-0--0-0-0-0-0--0-0-0-0-0-
