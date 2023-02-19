@@ -1,0 +1,42 @@
+from scipy.ndimage import convolve, generate_binary_structure
+
+# energy of a spin config in flat geometry
+#--------------------------------------------------
+# function to calculate energy in a flat geometry, i.e.,
+# lattice points on the boundary do not have lattice points from the opposite edges as neighbours
+def energy_flat(spin_config, J, h):
+    '''Calculate total energy of a given spin config in flat geomtery, i.e.,
+    lattice points on the edges don't have lattice points on the opposite edge as neighbours.
+    Args:
+        spin_config (2D numpy.ndarray): Spin config for which the energy is to be calculated
+        J (float): Interaction parameter of the system
+        h (float): Magnitude of the external magnetic field
+    Returns:
+        energy (float): Energy of the given spin config
+    '''
+    kern = generate_binary_structure(2, 1)
+    kern[1][1] = False
+    energy = -J*0.5*np.sum(spin_config * convolve(spin_config, kern, mode='constant', cval=0)) - h*np.sum(spin_config)
+    return energy
+#--------------------------------------------------
+
+# energy change for flat geometry
+#--------------------------------------------------
+if mode == 'flat':
+E_i = 0
+E_f = 0
+if x>0:
+    E_i += -J*spin_i*spin_config[x-1,y]
+    E_f += -J*spin_f*spin_config[x-1,y]
+if x<N-1:
+    E_i += -J*spin_i*spin_config[x+1,y]
+    E_f += -J*spin_f*spin_config[x+1,y]
+if y>0:
+    E_i += -J*spin_i*spin_config[x,y-1]
+    E_f += -J*spin_f*spin_config[x,y-1]
+if y<N-1:
+    E_i += -J*spin_i*spin_config[x,y+1]
+    E_f += -J*spin_f*spin_config[x,y+1]
+E_i += -h*spin_i
+E_f += -h*spin_f
+#--------------------------------------------------
