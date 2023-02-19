@@ -48,6 +48,7 @@ def metropolis(spin_config, iterations, burnin, J, h, beta, energy, mode='toroid
     tot_energy_noburnin = np.zeros(iterations + burnin)
     tot_spins = np.zeros(iterations)
     tot_energy = np.zeros(iterations)
+    
     for i in range(0, iterations + burnin):
         # step 1: pick a random point flip spins
         x = np.random.randint(0,N)
@@ -110,7 +111,7 @@ def metropolis(spin_config, iterations, burnin, J, h, beta, energy, mode='toroid
 
 
 # init values
-N = 50
+N = 70
 j = 1.
 h = 0.
 beta = 1.
@@ -225,16 +226,16 @@ plt.show()
 # phase transition
 # -0-0-0-0-0--0-0-0-0-0--0-0-0-0-0--0-0-0-0-0--0-0-0-0-0-
 
-beta = np.linspace(0, 1, 80)
+beta = np.linspace(0, 1, 50)
 
 netmag_p = np.zeros(len(beta))
 for i in tqdm(range(len(netmag_p))):
-    totspin, totenergy, totspinnob, totenergynob, dummy = metropolis(lattice_p, iter, burn, j, h, beta[i], energy_p, mode)
+    totspin, totenergy, totspinnob, totenergynob, equi_p = metropolis(lattice_p, iter, burn, j, h, beta[i], energy_p, mode)
     netmag_p[i] = np.average(totspin)/(N*N)
 
 netmag_n = np.zeros(len(beta))
 for i in tqdm(range(len(netmag_n))):
-    totspin, totenergy, totspinnob, totenergynob, dummy = metropolis(lattice_p, iter, burn, j, h, beta[i], energy_p, mode)
+    totspin, totenergy, totspinnob, totenergynob, equi_n = metropolis(lattice_p, iter, burn, j, h, beta[i], energy_p, mode)
     netmag_n[i] = np.average(totspin)/(N*N)
 
 #plot the results
@@ -242,4 +243,7 @@ plt.plot(beta, netmag_p, '.')
 plt.show()
 plt.plot(beta, netmag_n, '.')
 plt.show()
+# -0-0-0-0-0--0-0-0-0-0--0-0-0-0-0--0-0-0-0-0--0-0-0-0-0-
+
+# energy autocorrelation
 # -0-0-0-0-0--0-0-0-0-0--0-0-0-0-0--0-0-0-0-0--0-0-0-0-0-
