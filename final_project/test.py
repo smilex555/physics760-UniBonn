@@ -83,9 +83,22 @@ def worm(spin_config, iterations, burnin, J, h, beta, energy):
             spin_config = spin_config_prime.copy()
         
         tot_spins[step] = np.sum(spin_config)
-        tot_energy = energy
+        tot_energy[step] = energy
     
     return tot_spins, tot_energy
+
+def wolf2(spin_config, iterations, burnin, J, h, beta):
+    N = len(spin_config)
+    tot_spins = np.zeros(iterations)
+    tot_energy = np.zeros(iterations)
+    #insert burnin here    
+
+    for step in range(iterations):
+        x, y = np.random.randint(N), np.random.randint(N)
+        worm = [(x, y)]
+        tail = [(x, y)]
+        neighbours = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+
 
 latsize = 20
 

@@ -269,7 +269,7 @@ plt.show()
 # energy autocorrelation
 # -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-
 
-n_array = np.arange(5, 41, 2)
+n_array = np.arange(5, 151, 2)
 
 autocorrtime = np.zeros(len(n_array))
 for i in tqdm(range(len(n_array))):
