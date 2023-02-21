@@ -285,10 +285,10 @@ for i in tqdm(range(len(n_array))):
 def fitf(x, m, c):
     return m*x + c
 
-if not np.all(np.isnan(autocorrtime)):
+if np.all(np.isnan(autocorrtime)):
     print('Not enough Iterations!')
 
-if np.all(np.isnan(autocorrtime)):
+if not np.all(np.isnan(autocorrtime)):
     popt, pcov = curve_fit(fitf, np.log(n_array), np.log(autocorrtime))
     print('Fit slope:', np.round(popt[0], 2))
 
