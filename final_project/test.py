@@ -99,7 +99,6 @@ def wolf2(spin_config, iterations, burnin, J, h, beta):
         tail = [(x, y)]
         neighbours = [(1, 0), (-1, 0), (0, 1), (0, -1)]
 
-
 latsize = 20
 
 init_spin = np.random.choice([1, -1], (latsize, latsize))

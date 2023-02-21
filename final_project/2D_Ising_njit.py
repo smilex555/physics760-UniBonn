@@ -367,6 +367,6 @@ def worm(spin_config, iterations, burnin, J, h, beta, energy):
             spin_config = spin_config_prime.copy()
         
         tot_spins[step] = np.sum(spin_config)
-        tot_energy = energy
+        tot_energy[step] = energy
     
     return tot_spins, tot_energy
