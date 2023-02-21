@@ -313,7 +313,6 @@ def worm(spin_config, iterations, burnin, J, h, beta, energy):
     #insert burnin
 
     for step in tqdm(range(iterations)):
-        spin_config_prime = spin_config.copy()
         x, y = np.random.randint(N), np.random.randint(N)
         worm = [(x, y)]
         tail = [(x, y)]
@@ -322,6 +321,7 @@ def worm(spin_config, iterations, burnin, J, h, beta, energy):
             # move the head
             dir = [random.choice(neighbours)]
             xnew, ynew = x+dir[0][0], y+dir[0][1]
+            if (len(worm) > 5): break
             if (xnew > N-1) or (ynew > N-1) or (xnew < 0) or (ynew < 0): break
             elif ((xnew, ynew) == tail[0]): break
             elif spin_config[xnew, ynew] == spin_config[x, y]:
@@ -348,21 +348,23 @@ def worm(spin_config, iterations, burnin, J, h, beta, energy):
                 dE = E_f - E_i
                 if (dE>0)*(np.random.random() < np.exp(-beta*dE)):
                     spin_config[xnew,ynew] = spin_f
+                    energy += dE
                     worm.append((xnew, ynew))
                     x, y = xnew, ynew
                 elif dE<=0:
                     spin_config[xnew, ynew] = spin_f
-                    energy += dE      
+                    energy += dE
+                    x, y = xnew, ynew      
                 else: break
         
-        E_i = energy_toroid(spin_config_prime, J, h)
-        E_f = energy_toroid(spin_config, J, h)
-        dE = E_f - E_i
+        spin_config_prime = spin_config.copy()
+        xdata = [x for x, y  in worm]
+        ydata = [y for x, y in worm]
+        spin_config_prime[xdata, ydata] = -1 * spin_config_prime[xdata, ydata]
+        ef = energy_toroid(spin_config_prime, J, h)
+        dE = ef - energy
         if (dE>0)*(np.random.random() < np.exp(-beta*dE)):
-            xdata = [x for x, y  in worm]
-            ydata = [y for x, y in worm]
-            spin_config[xdata, ydata] = -1 * spin_config[xdata, ydata]
-            energy = E_f
+            spin_config = spin_config_prime.copy()
         
         tot_spins[step] = np.sum(spin_config)
         tot_energy = energy
