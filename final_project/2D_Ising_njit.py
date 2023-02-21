@@ -111,6 +111,8 @@ def spin_autocorr_time(spins):
     # Compute the mean and variance of the spin series
     m = np.mean(spins)
     v = np.var(spins)
+    if v == 0.:
+        return np.NaN
 
     # Compute the autocorrelation function of the spin series
     acf = np.correlate(spins - m, spins - m, mode='full')
@@ -125,7 +127,7 @@ def spin_autocorr_time(spins):
     return tau
 
 # init values
-N = 50
+N = 50 
 j = 1.
 h = 0.
 beta = 1.
@@ -283,98 +285,86 @@ for i in tqdm(range(len(n_array))):
 def fitf(x, m, c):
     return m*x + c
 
-popt, pcov = curve_fit(fitf, np.log(n_array), np.log(autocorrtime))
-print('Fit slope:', np.round(popt[0], 2))
+if not np.all(np.isnan(autocorrtime)):
+    print('Not enough Iterations!')
 
-# plot the results
-xrange = np.linspace(np.min(np.log(n_array)), np.max(np.log(n_array)), 20)
-plt.plot(np.log(n_array), np.log(autocorrtime), '.')
-plt.plot(xrange, fitf(xrange, *popt))
-plt.title(r'$log(\tau)$ vs. log(Lattice size)')
-plt.xlabel('log(Lattice size)')
-plt.ylabel(r'$log(\tau)')
-plt.show()
+if np.all(np.isnan(autocorrtime)):
+    popt, pcov = curve_fit(fitf, np.log(n_array), np.log(autocorrtime))
+    print('Fit slope:', np.round(popt[0], 2))
+
+    # plot the results
+    xrange = np.linspace(np.min(np.log(n_array)), np.max(np.log(n_array)), 20)
+    plt.plot(np.log(n_array), np.log(autocorrtime), '.')
+    plt.plot(xrange, fitf(xrange, *popt))
+    plt.title(r'$log(\tau)$ vs. log(Lattice size)')
+    plt.xlabel('log(Lattice size)')
+    plt.ylabel(r'$log(\tau)')
+    plt.show()
 
 # -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-
 
 # worm algorithm
 # -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-
 
-def calculate_energy(lattice, i, j):
-    """Calculate the energy cost of flipping the spin at site (i,j)"""
-    size = lattice.shape[0]
-    spin = lattice[i, j]
-    neighbours = lattice[(i+1)%size, j] + lattice[i, (j+1)%size] + lattice[(i-1)%size, j] + lattice[i, (j-1)%size]
-    return 2 * spin * neighbours
-
-def worm_algorithm(lattice, iterations, burnin, beta):
-    """Simulate the 2D Ising model using the worm algorithm"""
-    size = lattice.shape[0]
+def worm(spin_config, iterations, burnin, J, h, beta, energy):
+    N = len(spin_config)
     tot_spins = np.zeros(iterations)
     tot_energy = np.zeros(iterations)
-    
-    worm = set()  # Set of lattice coordinates in the worm
-    num_accepted = 0  # Counter for the number of accepted moves
-    # Choose a random site to start the worm
-    i, j = random.randint(0, size-1), random.randint(0, size-1)
-    worm.add((i, j))  # Add the site to the worm
-    # Perform iterations steps of the algorithm
-    for step in range(iterations+burnin):
-        # Choose a random direction to move the head or tail of the worm
-        if random.random() < 0.5:
-            # Move the head of the worm
-            if worm:
-                i, j = random.choice(list(worm))
-            else:
-                # If the worm is empty, choose a random point on the lattice
-                i, j = random.randint(0, size-1), random.randint(0, size-1)
-            neighbours = [(i+1)%size, j], [(i-1)%size, j], [i, (j+1)%size], [i, (j-1)%size]
-            # Calculate the energy cost of moving to each neighboring site
-            energies = [calculate_energy(lattice, x, y) for x, y in neighbours]
-            # Choose a site to move to with probability proportional to exp(-beta*energy)
-            probs = [np.exp(-beta*energy) for energy in energies]
-            prob_sum = sum(probs)
-            probs = [prob/prob_sum for prob in probs]  # Normalize the probabilities
-            k = np.random.choice(4, p=probs)
-            new_i, new_j = neighbours[k]
-            # Calculate the energy cost of adding or removing the new site
-            add_energy = calculate_energy(lattice, new_i, new_j)
-            remove_energy = calculate_energy(lattice, i, j)
-            # Calculate the acceptance probability for the move
-            p_accept = np.exp(-beta * (add_energy - remove_energy))
-            if random.random() < p_accept:
-                # Move the head of the worm to the new site and add it to the worm
-                worm.add((new_i, new_j))
-                num_accepted += 1
-        else:
-            if worm:
-                # Move the tail of the worm
-                i, j = random.choice(list(worm))
-                worm.remove((i, j))
-                # Calculate the energy cost of removing the site
-                energy = calculate_energy(lattice, i, j)
-                p_remove = 1 - np.exp(-beta * energy)
-                if random.random() < p_remove:
-                    # Remove the site from the worm
-                    num_accepted += 1
-            else:
-                # If the worm is empty, choose a random point on the lattice
-                i, j = random.randint(0, size-1), random.randint(0, size-1)
-                worm.add((i, j))
+    #insert burnin
 
-        # Flip the spin at the head of the worm
-        lattice[i, j] *= -1
-
-        if step >= burnin:
-            tot_spins[step - burnin] = np.sum(lattice)
-            energyapp = energy_toroid(lattice, 1, 0)
-            tot_energy[step - burnin] = energyapp
+    for step in tqdm(range(iterations)):
+        spin_config_prime = spin_config.copy()
+        x, y = np.random.randint(N), np.random.randint(N)
+        worm = [(x, y)]
+        tail = [(x, y)]
+        neighbours = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+        while True:
+            # move the head
+            dir = [random.choice(neighbours)]
+            xnew, ynew = x+dir[0][0], y+dir[0][1]
+            if (xnew > N-1) or (ynew > N-1) or (xnew < 0) or (ynew < 0): break
+            elif ((xnew, ynew) == tail[0]): break
+            elif spin_config[xnew, ynew] == spin_config[x, y]:
+                # we don't let internal loops in our worm
+                if not ((xnew, ynew) in worm):
+                    worm.append((xnew, ynew))
+                    x, y = xnew, ynew # head is moved
+            else:
+                # check energy cost of flipping
+                spin_i = spin_config[xnew, ynew]
+                spin_f = -1*spin_i
+                E_i = 0
+                E_f = 0
+                E_i += -J*spin_i*spin_config[(xnew-1)%N, ynew]
+                E_i += -J*spin_i*spin_config[(xnew+1)%N, ynew]
+                E_i += -J*spin_i*spin_config[xnew, (ynew-1)%N]
+                E_i += -J*spin_i*spin_config[xnew, (ynew+1)%N]
+                E_i += -h*spin_i
+                E_f += -J*spin_f*spin_config[(xnew-1)%N, ynew]
+                E_f += -J*spin_f*spin_config[(xnew+1)%N, ynew]
+                E_f += -J*spin_f*spin_config[xnew, (ynew-1)%N]
+                E_f += -J*spin_f*spin_config[xnew, (ynew+1)%N]
+                E_f += -h*spin_f
+                dE = E_f - E_i
+                if (dE>0)*(np.random.random() < np.exp(-beta*dE)):
+                    spin_config[xnew,ynew] = spin_f
+                    worm.append((xnew, ynew))
+                    x, y = xnew, ynew
+                elif dE<=0:
+                    spin_config[xnew, ynew] = spin_f
+                    energy += dE      
+                else: break
+        
+        E_i = energy_toroid(spin_config_prime, J, h)
+        E_f = energy_toroid(spin_config, J, h)
+        dE = E_f - E_i
+        if (dE>0)*(np.random.random() < np.exp(-beta*dE)):
+            xdata = [x for x, y  in worm]
+            ydata = [y for x, y in worm]
+            spin_config[xdata, ydata] = -1 * spin_config[xdata, ydata]
+            energy = E_f
+        
+        tot_spins[step] = np.sum(spin_config)
+        tot_energy = energy
     
     return tot_spins, tot_energy
-
-spinsworm, energyworm = worm_algorithm(lattice_p, 100000, 10000, 1)
-
-plt.plot(spinsworm/(N*N))
-plt.show()
-plt.plot(energyworm)
-plt.show()
