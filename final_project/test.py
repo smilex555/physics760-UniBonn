@@ -28,6 +28,7 @@ def worm(spin_config, iterations, burnin, J, h, beta, energy):
     tot_energy = np.zeros(iterations)
     #insert burnin
 
+    spin_config = spin_config.copy()
     for step in tqdm(range(iterations)):
         x, y = np.random.randint(N), np.random.randint(N)
         worm = [(x, y)]
@@ -37,14 +38,21 @@ def worm(spin_config, iterations, burnin, J, h, beta, energy):
             # move the head
             dir = [random.choice(neighbours)]
             xnew, ynew = x+dir[0][0], y+dir[0][1]
-            if (len(worm) > 5): break
             if (xnew > N-1) or (ynew > N-1) or (xnew < 0) or (ynew < 0): break
             elif ((xnew, ynew) == tail[0]): break
             elif spin_config[xnew, ynew] == spin_config[x, y]:
-                # we don't let internal loops in our worm
                 if not ((xnew, ynew) in worm):
                     worm.append((xnew, ynew))
-                    x, y = xnew, ynew # head is moved
+                    x, y = xnew, ynew
+                else:
+                    index = worm.index((xnew, ynew))
+                    if index == len(worm) - 2:
+                        x, y = worm[index - 1][0], worm[index - 1][1]
+                    else:
+                        if np.random.random() < 0.5:
+                            x, y = worm[index - 1][0], worm[index - 1][1]
+                        #else:
+                        #   x, y = worm[index + 1][0], worm[index + 1][1]
             else:
                 # check energy cost of flipping
                 spin_i = spin_config[xnew, ynew]
@@ -63,27 +71,33 @@ def worm(spin_config, iterations, burnin, J, h, beta, energy):
                 E_f += -h*spin_f
                 dE = E_f - E_i
                 if (dE>0)*(np.random.random() < np.exp(-beta*dE)):
-                    spin_config[xnew,ynew] = spin_f
                     energy += dE
                     worm.append((xnew, ynew))
+                    spin_config[xnew, ynew] = spin_f
                     x, y = xnew, ynew
                 elif dE<=0:
                     spin_config[xnew, ynew] = spin_f
                     energy += dE
-                    x, y = xnew, ynew      
+                    worm.append((xnew, ynew))
+                    x, y = xnew, ynew
                 else: break
-        
+        '''
         spin_config_prime = spin_config.copy()
         xdata = [x for x, y  in worm]
         ydata = [y for x, y in worm]
-        spin_config_prime[xdata, ydata] = -1 * spin_config_prime[xdata, ydata]
-        ef = energy_toroid(spin_config_prime, J, h)
+        spin_config[xdata, ydata] = -1 * spin_config[xdata, ydata]
+        ef = energy_toroid(spin_config, J, h)
         dE = ef - energy
         if (dE>0)*(np.random.random() < np.exp(-beta*dE)):
             spin_config = spin_config_prime.copy()
-        
+            energy = ef
+        elif (dE<0):
+            spin_config = spin_config_prime.copy()
+            energy = ef
+        '''
         tot_spins[step] = np.sum(spin_config)
         tot_energy[step] = energy
+        #if (spin_config.all() == spin_config_init.all()): print(step)
     
     return tot_spins, tot_energy
 
@@ -105,5 +119,5 @@ init_spin = np.random.choice([1, -1], (latsize, latsize))
 
 spins, nrg = worm(init_spin, 100000, 0, 1., 0, 1., energy_toroid(init_spin, 1., 0.))
 
-plt.plot(spins/spins.size)
+plt.plot(spins/(latsize*latsize))
 plt.show()
