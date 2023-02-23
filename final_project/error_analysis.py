@@ -39,6 +39,10 @@ def bootstrap(data,n_bs):
         
     return np.mean(mean_bs), np.std(mean_bs)
 
+# test blocking
+obs = np.array([1,3,5,7,9,11,13,15])
+block = blocking(obs,3)
+print(block)
 
 ###
 num_bs = 200 # number of bootstrap samples
