@@ -12,8 +12,9 @@ from tqdm import tqdm
 # function to calculate energy in a toroidal geometry, i.e.,
 # lattice points on the boundary have lattice points from the opposite edges as neighbours
 def energy_toroid(spin_config, J, h):
-    '''Calculate total energy of a given spin config in flat geomtery, i.e.,
-    lattice points on the edges don't have lattice points on the opposite edge as neighbours.
+    '''
+    Calculate total energy of a given spin config in toroidal geomtery, i.e.,
+    lattice points on the edges have lattice points on the opposite edge as neighbours.
     Args:
         spin_config (2D numpy.ndarray): Spin config for which the energy is to be calculated
         J (float): Interaction parameter of the system
@@ -38,7 +39,8 @@ def energy_toroid(spin_config, J, h):
 #@njit("UniTuple(f8[:], 2)(f8[:,:], i8, i8, f8, f8, f8, f8)", nogil=True)
 @njit(nogil=True)
 def metropolis(spin_config, iterations, burnin, J, h, beta, energy):
-    '''Metropolis algorithm for a 2D Ising Model.
+    '''
+    Metropolis algorithm for a 2D Ising Model.
     Args:
         spin_config (2D numpy.ndarray): Initial spin configuration
         iterations (int): Total number of Metropolis iterations
@@ -101,13 +103,13 @@ def metropolis(spin_config, iterations, burnin, J, h, beta, energy):
     return tot_spins, tot_energy, tot_spins_noburnin, tot_energy_noburnin
 
 def spin_autocorr_time(spins):
-    """
+    '''
     Calculate the spin autocorrelation time for an Ising model from a series of net spin values.
     Args:
         spins (1D numpy.ndarray): 1D NumPy array of net spin values
     Returns:
         tau (float): Spin autocorrelation time
-    """
+    '''
     # Compute the mean and variance of the spin series
     m = np.mean(spins)
     v = np.var(spins)
