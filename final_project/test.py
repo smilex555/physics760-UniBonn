@@ -2,6 +2,7 @@ import numpy as np
 import random
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
 
 # function to calculate energy in a toroidal geometry, i.e.,
 # lattice points on the boundary have lattice points from the opposite edges as neighbours
@@ -96,22 +97,8 @@ def worm(spin_config, iterations, burnin, J, h, beta, energy):
             energy = ef
         '''
         tot_spins[step] = np.sum(spin_config)
-        tot_energy[step] = energy
-        #if (spin_config.all() == spin_config_init.all()): print(step)
     
     return tot_spins, tot_energy
-
-def wolf2(spin_config, iterations, burnin, J, h, beta):
-    N = len(spin_config)
-    tot_spins = np.zeros(iterations)
-    tot_energy = np.zeros(iterations)
-    #insert burnin here    
-
-    for step in range(iterations):
-        x, y = np.random.randint(N), np.random.randint(N)
-        worm = [(x, y)]
-        tail = [(x, y)]
-        neighbours = [(1, 0), (-1, 0), (0, 1), (0, -1)]
 
 latsize = 20
 
@@ -121,3 +108,61 @@ spins, nrg = worm(init_spin, 100000, 0, 1., 0, 1., energy_toroid(init_spin, 1., 
 
 plt.plot(spins/(latsize*latsize))
 plt.show()
+
+def spin_autocorr_time(spins):
+    """
+    Calculate the spin autocorrelation time for an Ising model from a series of net spin values.
+    Args:
+        spins (1D numpy.ndarray): 1D NumPy array of net spin values
+    Returns:
+        tau (float): Spin autocorrelation time
+    """
+    # Compute the mean and variance of the spin series
+    m = np.mean(spins)
+    v = np.var(spins)
+    if v == 0.:
+        return np.NaN
+
+    # Compute the autocorrelation function of the spin series
+    acf = np.correlate(spins - m, spins - m, mode='full')
+    acf = acf[len(acf)//2:] / (v * (len(spins) - 1))
+
+    # Find the first index where the autocorrelation function is less than exp(-1)
+    idx = np.where(acf < np.exp(-1))[0][0]
+
+    # Compute the spin autocorrelation time
+    tau = 2 * np.sum(acf[:idx])
+
+    return tau
+
+n_array = np.arange(5, 31, 2)
+
+autocorrtime = np.zeros(len(n_array))
+for i in tqdm(range(len(n_array))):
+    init_random = np.random.random((n_array[i], n_array[i]))
+    lattice = np.zeros((n_array[i], n_array[i]))
+    lattice[init_random <= .8] = 1
+    lattice[init_random > .8] = -1
+    energy_t = energy_toroid(lattice, 1, 0)
+    totspin, totenergy = worm(lattice, 100000, 0, 1, 0, 1, energy_t)
+    autocorrtime[i] = spin_autocorr_time(totspin)
+
+# fit to verify tau-lattice size scaling
+def fitf(x, m, c):
+    return m*x + c
+
+if np.all(np.isnan(autocorrtime)):
+    print('Not enough Iterations!')
+
+if not np.all(np.isnan(autocorrtime)):
+    popt, pcov = curve_fit(fitf, np.log(n_array), np.log(autocorrtime))
+    print('Fit slope:', np.round(popt[0], 2))
+
+    # plot the results
+    xrange = np.linspace(np.min(np.log(n_array)), np.max(np.log(n_array)), 20)
+    plt.plot(np.log(n_array), np.log(autocorrtime), '.')
+    plt.plot(xrange, fitf(xrange, *popt))
+    plt.title(r'$log(\tau)$ vs. log(Lattice size)')
+    plt.xlabel('log(Lattice size)')
+    plt.ylabel(r'$log(\tau)')
+    plt.show()
