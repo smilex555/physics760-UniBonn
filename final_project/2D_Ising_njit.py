@@ -308,29 +308,41 @@ if not np.all(np.isnan(autocorrtime)):
 # worm algorithm
 # -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-
 
+@njit(nogil=True)
 def worm(spin_config, iterations, burnin, J, h, beta, energy):
     N = len(spin_config)
     tot_spins = np.zeros(iterations)
     tot_energy = np.zeros(iterations)
     #insert burnin
 
-    for step in tqdm(range(iterations)):
+    spin_config = spin_config.copy()
+    for step in range(iterations):
         x, y = np.random.randint(N), np.random.randint(N)
-        worm = [(x, y)]
-        tail = [(x, y)]
-        neighbours = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+        worm = np.array([[x, y]])
+        tail = np.array([[x, y]])
+        neighbours = np.array([[1, 0], [-1, 0], [0, 1], [0, -1]])
         while True:
             # move the head
-            dir = [random.choice(neighbours)]
-            xnew, ynew = x+dir[0][0], y+dir[0][1]
-            if (len(worm) > 5): break
+            while True:
+                dir = np.random.choice(np.array([-1, 0, 1]), 2)
+                if np.any((neighbours[:, 0] == dir[0])*(neighbours[:, 1] == dir[1])): break
+            xnew, ynew = x+dir[0], y+dir[1]
+            codi = np.array([[xnew, ynew]])
             if (xnew > N-1) or (ynew > N-1) or (xnew < 0) or (ynew < 0): break
-            elif ((xnew, ynew) == tail[0]): break
+            elif (xnew == tail[0, 0])*(ynew == tail[0, 1]): break
             elif spin_config[xnew, ynew] == spin_config[x, y]:
-                # we don't let internal loops in our worm
-                if not ((xnew, ynew) in worm):
-                    worm.append((xnew, ynew))
-                    x, y = xnew, ynew # head is moved
+                if not np.any((worm[:, 0] == codi[0, 0])*(worm[:, 1] == codi[0, 1])):
+                    worm = np.append(worm, codi, axis = 0)
+                    x, y = xnew, ynew
+                else:
+                    index = np.where((worm[:, 0] == codi[0, 0])*(worm[:, 1] == codi[0, 1]))[0]
+                    if index[0] == len(worm) - 2:
+                        x, y = worm[index[0]][0], worm[index[0]][1]
+                    else:
+                        if np.random.random() < 0.5:
+                            x, y = worm[index[0] - 1][0], worm[index[0] - 1][1]
+                        else:
+                            x, y = worm[index[0] + 1][0], worm[index[0] + 1][1]
             else:
                 # check energy cost of flipping
                 spin_i = spin_config[xnew, ynew]
@@ -349,26 +361,18 @@ def worm(spin_config, iterations, burnin, J, h, beta, energy):
                 E_f += -h*spin_f
                 dE = E_f - E_i
                 if (dE>0)*(np.random.random() < np.exp(-beta*dE)):
-                    spin_config[xnew,ynew] = spin_f
                     energy += dE
-                    worm.append((xnew, ynew))
+                    worm = np.append(worm, codi, axis = 0)
+                    spin_config[xnew, ynew] = spin_f
                     x, y = xnew, ynew
                 elif dE<=0:
                     spin_config[xnew, ynew] = spin_f
                     energy += dE
-                    x, y = xnew, ynew      
+                    worm = np.append(worm, codi, axis = 0)
+                    x, y = xnew, ynew
                 else: break
         
-        spin_config_prime = spin_config.copy()
-        xdata = [x for x, y  in worm]
-        ydata = [y for x, y in worm]
-        spin_config_prime[xdata, ydata] = -1 * spin_config_prime[xdata, ydata]
-        ef = energy_toroid(spin_config_prime, J, h)
-        dE = ef - energy
-        if (dE>0)*(np.random.random() < np.exp(-beta*dE)):
-            spin_config = spin_config_prime.copy()
-        
         tot_spins[step] = np.sum(spin_config)
-        tot_energy[step] = energy
-    
+        tot_energy[step] = energy 
+
     return tot_spins, tot_energy
