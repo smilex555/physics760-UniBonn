@@ -1,8 +1,8 @@
 import numpy as np
-import random
-from tqdm import tqdm
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
+from numba import njit
+from tqdm import tqdm
 
 # function to calculate energy in a toroidal geometry, i.e.,
 # lattice points on the boundary have lattice points from the opposite edges as neighbours
@@ -23,6 +23,8 @@ def energy_toroid(spin_config, J, h):
     energy = -J*0.5*np.sum(spin_config*(left + right + up +down)) - h*np.sum(spin_config)
     return energy
 
+#@njit("UniTuple(f8[:], 2)(f8[:,:], i8, i8, f8, f8, f8, f8)", nogil=True)
+@njit(nogil=True)
 def worm(spin_config, iterations, burnin, J, h, beta, energy):
     N = len(spin_config)
     tot_spins = np.zeros(iterations)
@@ -30,30 +32,33 @@ def worm(spin_config, iterations, burnin, J, h, beta, energy):
     #insert burnin
 
     spin_config = spin_config.copy()
-    for step in tqdm(range(iterations)):
+    for step in range(iterations):
         x, y = np.random.randint(N), np.random.randint(N)
-        worm = [(x, y)]
-        tail = [(x, y)]
-        neighbours = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+        worm = np.array([[x, y]])
+        tail = np.array([[x, y]])
+        neighbours = np.array([[1, 0], [-1, 0], [0, 1], [0, -1]])
         while True:
             # move the head
-            dir = [random.choice(neighbours)]
-            xnew, ynew = x+dir[0][0], y+dir[0][1]
+            while True:
+                dir = np.random.choice(np.array([-1, 0, 1]), 2)
+                if np.any((neighbours[:, 0] == dir[0])*(neighbours[:, 1] == dir[1])): break
+            xnew, ynew = x+dir[0], y+dir[1]
+            codi = np.array([[xnew, ynew]])
             if (xnew > N-1) or (ynew > N-1) or (xnew < 0) or (ynew < 0): break
-            elif ((xnew, ynew) == tail[0]): break
+            elif (xnew == tail[0, 0])*(ynew == tail[0, 1]): break
             elif spin_config[xnew, ynew] == spin_config[x, y]:
-                if not ((xnew, ynew) in worm):
-                    worm.append((xnew, ynew))
+                if not np.any((worm[:, 0] == codi[0, 0])*(worm[:, 1] == codi[0, 1])):
+                    worm = np.append(worm, codi, axis = 0)
                     x, y = xnew, ynew
                 else:
-                    index = worm.index((xnew, ynew))
+                    index = np.where((worm[:, 0] == codi[0, 0])*(worm[:, 1] == codi[0, 1]))[0]
                     if index == len(worm) - 2:
-                        x, y = worm[index - 1][0], worm[index - 1][1]
+                        x, y = worm[index - 1][0, 0], worm[index - 1][0, 1]
                     else:
                         if np.random.random() < 0.5:
-                            x, y = worm[index - 1][0], worm[index - 1][1]
+                            x, y = worm[index - 1][0, 0], worm[index - 1][0, 1]
                         #else:
-                        #   x, y = worm[index + 1][0], worm[index + 1][1]
+                        #   x, y = worm[index + 1, 0], worm[index + 1, 1]
             else:
                 # check energy cost of flipping
                 spin_i = spin_config[xnew, ynew]
@@ -73,13 +78,13 @@ def worm(spin_config, iterations, burnin, J, h, beta, energy):
                 dE = E_f - E_i
                 if (dE>0)*(np.random.random() < np.exp(-beta*dE)):
                     energy += dE
-                    worm.append((xnew, ynew))
+                    worm = np.append(worm, codi, axis = 0)
                     spin_config[xnew, ynew] = spin_f
                     x, y = xnew, ynew
                 elif dE<=0:
                     spin_config[xnew, ynew] = spin_f
                     energy += dE
-                    worm.append((xnew, ynew))
+                    worm = np.append(worm, codi, axis = 0)
                     x, y = xnew, ynew
                 else: break
         '''
@@ -89,14 +94,14 @@ def worm(spin_config, iterations, burnin, J, h, beta, energy):
         spin_config[xdata, ydata] = -1 * spin_config[xdata, ydata]
         ef = energy_toroid(spin_config, J, h)
         dE = ef - energy
-        if (dE>0)*(np.random.random() < np.exp(-beta*dE)):
-            spin_config = spin_config_prime.copy()
-            energy = ef
-        elif (dE<0):
+        if (dE<0): continue
+        if (dE>0)*(np.random.random() < np.exp(-beta*dE)): continue
+        else:
             spin_config = spin_config_prime.copy()
             energy = ef
         '''
         tot_spins[step] = np.sum(spin_config)
+        tot_energy[step] = energy 
     
     return tot_spins, tot_energy
 
@@ -104,7 +109,8 @@ latsize = 20
 
 init_spin = np.random.choice([1, -1], (latsize, latsize))
 
-spins, nrg = worm(init_spin, 100000, 0, 1., 0, 1., energy_toroid(init_spin, 1., 0.))
+energy_t = energy_toroid(init_spin, 1., 0.)
+spins, nrg = worm(init_spin, 100000, 0, 1., 0, 1., energy_t)
 
 plt.plot(spins/(latsize*latsize))
 plt.show()
@@ -135,7 +141,7 @@ def spin_autocorr_time(spins):
 
     return tau
 
-n_array = np.arange(5, 31, 2)
+n_array = np.arange(5, 51, 2)
 
 autocorrtime = np.zeros(len(n_array))
 for i in tqdm(range(len(n_array))):
