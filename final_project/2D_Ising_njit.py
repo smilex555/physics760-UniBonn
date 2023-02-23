@@ -62,7 +62,7 @@ def metropolis(spin_config, iterations, burnin, J, h, beta, energy):
     tot_spins = np.zeros(iterations)
     tot_energy = np.zeros(iterations)
     
-    for i in range(0, iterations + burnin):
+    for i in range(iterations + burnin):
         # step 1: pick a random point flip spins
         x = np.random.randint(0,N)
         y = np.random.randint(0,N)
