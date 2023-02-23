@@ -25,11 +25,50 @@ def energy_toroid(spin_config, J, h):
     return energy
 
 @njit(nogil=True)
+def justburn(spin_config, burnin, J, h, beta, energy):
+    N = len(spin_config)
+    spin_config = spin_config.copy()
+    
+    for _ in range(burnin):
+        # step 1: pick a random point flip spins
+        x = np.random.randint(0,N)
+        y = np.random.randint(0,N)
+        spin_i = spin_config[x,y]
+        spin_f = -1*spin_i
+        
+        # step 2: energy change for toroidal geometry
+        E_i = 0
+        E_f = 0
+        E_i += -J*spin_i*spin_config[(x-1)%N, y]
+        E_i += -J*spin_i*spin_config[(x+1)%N, y]
+        E_i += -J*spin_i*spin_config[x, (y-1)%N]
+        E_i += -J*spin_i*spin_config[x, (y+1)%N]
+        E_i += -h*spin_i
+        E_f += -J*spin_f*spin_config[(x-1)%N, y]
+        E_f += -J*spin_f*spin_config[(x+1)%N, y]
+        E_f += -J*spin_f*spin_config[x, (y-1)%N]
+        E_f += -J*spin_f*spin_config[x, (y+1)%N]
+        E_f += -h*spin_f
+        
+        # step 3: determine whether to accept the change
+        dE = E_f - E_i
+        if (dE>0)*(np.random.random() < np.exp(-beta*dE)):
+            spin_config[x,y] = spin_f
+            energy += dE
+        elif dE<=0:
+            spin_config[x,y] = spin_f
+            energy += dE
+
+    # return the arrays of total spins and energies over the iterations and the final spin config 
+    return spin_config, energy
+
+@njit(nogil=True)
 def worm(spin_config, iterations, burnin, J, h, beta, energy):
     N = len(spin_config)
     tot_spins = np.zeros(iterations)
     tot_energy = np.zeros(iterations)
     #insert burnin
+    spin_config, energy = justburn(spin_config, burnin, J, h, beta, energy)
 
     spin_config = spin_config.copy()
     for step in range(iterations):
@@ -98,7 +137,7 @@ latsize = 20
 init_spin = np.random.choice([1, -1], (latsize, latsize))
 
 energy_t = energy_toroid(init_spin, 1., 0.)
-spins, nrg = worm(init_spin, 100000, 0, 1., 0, 1., energy_t)
+spins, nrg = worm(init_spin, 70000, 30000, 1., 0, 1., energy_t)
 
 plt.plot(spins/(latsize*latsize))
 plt.show()
@@ -129,7 +168,7 @@ def spin_autocorr_time(spins):
 
     return tau
 
-n_array = np.arange(5, 101, 2)
+n_array = np.arange(5, 41, 2)
 
 autocorrtime = np.zeros(len(n_array))
 for i in tqdm(range(len(n_array))):
