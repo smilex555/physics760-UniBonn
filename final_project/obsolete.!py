@@ -40,3 +40,17 @@ if y<N-1:
 E_i += -h*spin_i
 E_f += -h*spin_f
 #--------------------------------------------------
+
+# step to flip all the spins on the worm and check if it is favourable
+#--------------------------------------------------
+        spin_config_prime = spin_config.copy()
+        xdata = [x for x, y  in worm]
+        ydata = [y for x, y in worm]
+        spin_config[xdata, ydata] = -1 * spin_config[xdata, ydata]
+        ef = energy_toroid(spin_config, J, h)
+        dE = ef - energy
+        if (dE<0): continue
+        if (dE>0)*(np.random.random() < np.exp(-beta*dE)): continue
+        else:
+            spin_config = spin_config_prime.copy()
+            energy = ef
