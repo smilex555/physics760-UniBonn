@@ -7,8 +7,9 @@ from tqdm import tqdm
 # function to calculate energy in a toroidal geometry, i.e.,
 # lattice points on the boundary have lattice points from the opposite edges as neighbours
 def energy_toroid(spin_config, J, h):
-    '''Calculate total energy of a given spin config in flat geomtery, i.e.,
-    lattice points on the edges don't have lattice points on the opposite edge as neighbours.
+    '''
+    Calculate total energy of a given spin config in toroidal geomtery, i.e.,
+    lattice points on the edges have lattice points on the opposite edge as neighbours.
     Args:
         spin_config (2D numpy.ndarray): Spin config for which the energy is to be calculated
         J (float): Interaction parameter of the system
@@ -23,7 +24,6 @@ def energy_toroid(spin_config, J, h):
     energy = -J*0.5*np.sum(spin_config*(left + right + up +down)) - h*np.sum(spin_config)
     return energy
 
-#@njit("UniTuple(f8[:], 2)(f8[:,:], i8, i8, f8, f8, f8, f8)", nogil=True)
 @njit(nogil=True)
 def worm(spin_config, iterations, burnin, J, h, beta, energy):
     N = len(spin_config)
@@ -52,13 +52,13 @@ def worm(spin_config, iterations, burnin, J, h, beta, energy):
                     x, y = xnew, ynew
                 else:
                     index = np.where((worm[:, 0] == codi[0, 0])*(worm[:, 1] == codi[0, 1]))[0]
-                    if index == len(worm) - 2:
-                        x, y = worm[index - 1][0, 0], worm[index - 1][0, 1]
+                    if index[0] == len(worm) - 2:
+                        x, y = worm[index[0]][0], worm[index[0]][1]
                     else:
                         if np.random.random() < 0.5:
-                            x, y = worm[index - 1][0, 0], worm[index - 1][0, 1]
-                        #else:
-                        #   x, y = worm[index + 1, 0], worm[index + 1, 1]
+                            x, y = worm[index[0] - 1][0], worm[index[0] - 1][1]
+                        else:
+                            x, y = worm[index[0] + 1][0], worm[index[0] + 1][1]
             else:
                 # check energy cost of flipping
                 spin_i = spin_config[xnew, ynew]
@@ -87,22 +87,10 @@ def worm(spin_config, iterations, burnin, J, h, beta, energy):
                     worm = np.append(worm, codi, axis = 0)
                     x, y = xnew, ynew
                 else: break
-        '''
-        spin_config_prime = spin_config.copy()
-        xdata = [x for x, y  in worm]
-        ydata = [y for x, y in worm]
-        spin_config[xdata, ydata] = -1 * spin_config[xdata, ydata]
-        ef = energy_toroid(spin_config, J, h)
-        dE = ef - energy
-        if (dE<0): continue
-        if (dE>0)*(np.random.random() < np.exp(-beta*dE)): continue
-        else:
-            spin_config = spin_config_prime.copy()
-            energy = ef
-        '''
+        
         tot_spins[step] = np.sum(spin_config)
         tot_energy[step] = energy 
-    
+
     return tot_spins, tot_energy
 
 latsize = 20
@@ -116,13 +104,13 @@ plt.plot(spins/(latsize*latsize))
 plt.show()
 
 def spin_autocorr_time(spins):
-    """
+    '''
     Calculate the spin autocorrelation time for an Ising model from a series of net spin values.
     Args:
         spins (1D numpy.ndarray): 1D NumPy array of net spin values
     Returns:
         tau (float): Spin autocorrelation time
-    """
+    '''
     # Compute the mean and variance of the spin series
     m = np.mean(spins)
     v = np.var(spins)
@@ -141,7 +129,7 @@ def spin_autocorr_time(spins):
 
     return tau
 
-n_array = np.arange(5, 51, 2)
+n_array = np.arange(5, 101, 2)
 
 autocorrtime = np.zeros(len(n_array))
 for i in tqdm(range(len(n_array))):
@@ -152,6 +140,7 @@ for i in tqdm(range(len(n_array))):
     energy_t = energy_toroid(lattice, 1, 0)
     totspin, totenergy = worm(lattice, 100000, 0, 1, 0, 1, energy_t)
     autocorrtime[i] = spin_autocorr_time(totspin)
+
 
 # fit to verify tau-lattice size scaling
 def fitf(x, m, c):
