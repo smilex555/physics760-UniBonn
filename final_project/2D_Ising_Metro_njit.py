@@ -62,7 +62,8 @@ def metropolis(spin_config, iterations, burnin, J, h, beta, energy):
     tot_energy_noburnin = np.zeros(iterations + burnin)
     tot_spins = np.zeros(iterations)
     tot_energy = np.zeros(iterations)
-    
+    susceptibility = np.zeros(iterations)
+
     for i in range(iterations + burnin):
         # step 1: pick a random point flip spins
         x = np.random.randint(0,N)
@@ -99,9 +100,9 @@ def metropolis(spin_config, iterations, burnin, J, h, beta, energy):
         if i >= burnin:
             tot_spins[i - burnin] = np.sum(spin_config)
             tot_energy[i - burnin] = energy
-
+            susceptibility[i - burnin] = beta*(np.var(spin_config))*(N*N)
     # return the arrays of total spins and energies over the iterations and the final spin config 
-    return tot_spins, tot_energy, tot_spins_noburnin, tot_energy_noburnin
+    return tot_spins, tot_energy, tot_spins_noburnin, tot_energy_noburnin, susceptibility
 
 #function to calculate the spin autocorrelation time, given an array of net spins about MC time
 def spin_autocorr_time(spins):
@@ -159,8 +160,8 @@ def test():
 
     # metropolis algo
     start = time.time()
-    spins_n, energies_n, spinsnob_n, energiesnob_n = metropolis(lattice_n, iter, burn, j, h, beta, energy_n)
-    spins_p, energies_p, spinsnob_p, energiesnob_p = metropolis(lattice_p, iter, burn, j, h, beta, energy_p)
+    spins_n, energies_n, spinsnob_n, energiesnob_n, sus_n = metropolis(lattice_n, iter, burn, j, h, beta, energy_n)
+    spins_p, energies_p, spinsnob_p, energiesnob_p, sus_p = metropolis(lattice_p, iter, burn, j, h, beta, energy_p)
     print('Runtime:', np.round(time.time()-start, 2), 's')
 
     # plot the results
@@ -257,9 +258,9 @@ def algobehave():
     energy2 = energy_toroid(init_spin2, j, h)
     energy3 = energy_toroid(init_spin3, j, h)
 
-    spins1, energies1, spinsnob1, energiesnob1 = metropolis(init_spin1, iter, burn, j, h, beta, energy1)
-    spins2, energies2, spinsnob2, energiesnob2 = metropolis(init_spin2, iter, burn, j, h, beta, energy2)
-    spins3, energies3, spinsnob3, energiesnob3 = metropolis(init_spin3, iter, burn, j, h, beta, energy3)
+    spins1, energies1, spinsnob1, energiesnob1, sus1 = metropolis(init_spin1, iter, burn, j, h, beta, energy1)
+    spins2, energies2, spinsnob2, energiesnob2, sus2 = metropolis(init_spin2, iter, burn, j, h, beta, energy2)
+    spins3, energies3, spinsnob3, energiesnob3, sus3 = metropolis(init_spin3, iter, burn, j, h, beta, energy3)
 
     plt.plot(spins1/(n1*n1), label=f'N = {n1}')
     plt.plot(spins2/(n2*n2), label=f'N = {n2}')
@@ -283,9 +284,9 @@ def algobehave():
 
 # -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-
 
-# phase transition
+# mag phase transition
 # -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-
-def phasetrans():
+def magphasetrans():
     beta_arr = np.linspace(0, 1, 50)
 
     n1 = 50
@@ -316,15 +317,15 @@ def phasetrans():
     netmag3 = np.zeros(len(beta_arr))
 
     for i in tqdm(range(len(netmag1))):
-        totspin1, totenergy1, totspinnob1, totenergynob1 = metropolis(init_spin1, iter, burn, j, h, beta_arr[i], energy1)
+        totspin1, totenergy1, totspinnob1, totenergynob1, sus1 = metropolis(init_spin1, iter, burn, j, h, beta_arr[i], energy1)
         netmag1[i] = np.average(totspin1)/(n1*n1)
 
     for i in tqdm(range(len(netmag2))):
-        totspin2, totenergy2, totspinnob2, totenergynob2 = metropolis(init_spin2, iter, burn, j, h, beta_arr[i], energy2)
+        totspin2, totenergy2, totspinnob2, totenergynob2, sus2 = metropolis(init_spin2, iter, burn, j, h, beta_arr[i], energy2)
         netmag2[i] = np.average(totspin2)/(n2*n2)
 
     for i in tqdm(range(len(netmag3))):
-        totspin3, totenergy3, totspinnob3, totenergynob3 = metropolis(init_spin3, iter, burn, j, h, beta_arr[i], energy3)
+        totspin3, totenergy3, totspinnob3, totenergynob3, sus3 = metropolis(init_spin3, iter, burn, j, h, beta_arr[i], energy3)
         netmag3[i] = np.average(totspin3)/(n3*n3)
 
     # critcal coupling J_c
@@ -363,7 +364,61 @@ def phasetrans():
     plt.title('Net Magnetisation vs. Inverse Temperature')
     plt.legend(loc='upper left')
     plt.show()
+# -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-
 
+# chi phase transition
+# -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-
+def chiphasetrans():
+    beta_arr = np.linspace(0, 1, 50)
+
+    n1 = 50
+    n2 = 70
+    n3 = 90
+
+    init_random = np.random.random((n1, n1))
+    init_spin1 = np.zeros((n1, n1))
+    init_spin1[init_random >= .8] = -1
+    init_spin1[init_random < .8] = 1
+
+    init_random = np.random.random((n2, n2))
+    init_spin2 = np.zeros((n2, n2))
+    init_spin2[init_random >= .8] = -1
+    init_spin2[init_random < .8] = 1
+
+    init_random = np.random.random((n3, n3))
+    init_spin3 = np.zeros((n3, n3))
+    init_spin3[init_random >= .8] = -1
+    init_spin3[init_random < .8] = 1
+
+    energy1 = energy_toroid(init_spin1, j, h)
+    energy2 = energy_toroid(init_spin2, j, h)
+    energy3 = energy_toroid(init_spin3, j, h)
+
+    chi1 = np.zeros(len(beta_arr))
+    chi2 = np.zeros(len(beta_arr))
+    chi3 = np.zeros(len(beta_arr))
+
+    for i in tqdm(range(len(chi1))):
+        totspin1, totenergy1, totspinnob1, totenergynob1, sus1 = metropolis(init_spin1, iter, burn, j, h, beta_arr[i], energy1)
+        chi1[i] = np.average(sus1)
+
+    for i in tqdm(range(len(chi2))):
+        totspin2, totenergy2, totspinnob2, totenergynob2, sus2 = metropolis(init_spin2, iter, burn, j, h, beta_arr[i], energy2)
+        chi2[i] = np.average(sus2)
+
+    for i in tqdm(range(len(chi3))):
+        totspin3, totenergy3, totspinnob3, totenergynob3, sus3 = metropolis(init_spin3, iter, burn, j, h, beta_arr[i], energy3)
+        chi3[i] = np.average(sus3)
+
+    #plot the results
+    plt.plot(beta_arr, chi1, '.', label=f'N = {n1}')
+    plt.plot(beta_arr, chi2, '.', label=f'N = {n2}')
+    plt.plot(beta_arr, chi3, '.', label=f'N = {n3}')
+    plt.xlabel(r'Inverse Temperature ($\beta$)')
+    plt.ylabel(r'Susceptibility ($\chi$)')
+    plt.title('Susceptibility vs. Inverse Temperature')
+    plt.legend(loc='upper left')
+    plt.show()
 # -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-
 
 # energy autocorrelation
@@ -416,6 +471,7 @@ if __name__ == '__main__':
     # uncomment the next lines to run a specific part of the code
     #test()
     #algobehave()
-    #phasetrans()
+    #magphasetrans()
+    chiphasetrans()
     #dyncritexp()
     pass
