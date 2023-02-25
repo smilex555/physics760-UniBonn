@@ -11,7 +11,6 @@ import time
 from tqdm import tqdm
 from error_analysis import bootstrap
 
-
 # function to calculate energy in a toroidal geometry, i.e.,
 # lattice points on the boundary have lattice points from the opposite edges as neighbours
 def energy_toroid(spin_config, J, h):
