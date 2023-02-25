@@ -106,8 +106,6 @@ def metropolis(spin_config, iterations, burnin, J, h, beta, energy):
     # return the arrays of total spins and energies over the iterations and the final spin config 
     return tot_spins, tot_energy, tot_spins_noburnin, tot_energy_noburnin, susceptibility
 
-
-
 #function to calculate the spin autocorrelation time, given an array of net spins about MC time
 def spin_autocorr_time(spins):
     '''
