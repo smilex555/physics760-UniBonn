@@ -9,6 +9,8 @@ from mpmath import mp
 from numba import njit
 import time
 from tqdm import tqdm
+from error_analysis import bootstrap
+
 
 # function to calculate energy in a toroidal geometry, i.e.,
 # lattice points on the boundary have lattice points from the opposite edges as neighbours
@@ -103,6 +105,8 @@ def metropolis(spin_config, iterations, burnin, J, h, beta, energy):
     # return the arrays of total spins and energies over the iterations and the final spin config 
     return tot_spins, tot_energy, tot_spins_noburnin, tot_energy_noburnin
 
+
+
 #function to calculate the spin autocorrelation time, given an array of net spins about MC time
 def spin_autocorr_time(spins):
     '''
@@ -129,6 +133,34 @@ def spin_autocorr_time(spins):
     tau = 2 * np.sum(acf[:idx])
 
     return tau
+
+def susceptibility(data,beta,Nbst=200):
+    Nconf = data.shape
+    sampleMeans = np.zeros(Nbst)
+    
+    for k in range(Nbst):
+        idx = np.random.randint(0,Nconf,size=Nconf)
+        
+        sample = data[idx]
+        
+        sampleMeans[k] = beta * ( np.mean(sample**2) - np.mean(sample)**2 )
+        
+    return np.mean(sampleMeans), np.std(sampleMeans)
+
+
+def spesificHeat(data,beta,Nbst=200):
+     
+    Nconf = data.shape
+    sampleMeans = np.zeros(Nbst)
+    
+    for k in range(Nbst):
+        idx = np.random.randint(0,Nconf,size=Nconf)
+        
+        sample = data[idx]
+        
+        sampleMeans[k] = beta**2 * ( np.mean(sample**2) - np.mean(sample)**2 )
+        
+    return np.mean(sampleMeans), np.std(sampleMeans)    
 
 # test if everything's working as expected
 # -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-
@@ -261,6 +293,7 @@ def algobehave():
     spins2, energies2, spinsnob2, energiesnob2 = metropolis(init_spin2, iter, burn, j, h, beta, energy2)
     spins3, energies3, spinsnob3, energiesnob3 = metropolis(init_spin3, iter, burn, j, h, beta, energy3)
 
+
     plt.plot(spins1/(n1*n1), label=f'N = {n1}')
     plt.plot(spins2/(n2*n2), label=f'N = {n2}')
     plt.plot(spins3/(n3*n3), label=f'N = {n3}')
@@ -288,7 +321,7 @@ def algobehave():
 # phase transition
 # -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-
 def phasetrans():
-    beta_arr = np.linspace(0, 1, 50)
+    beta_arr = np.linspace(0, 1, 25)
 
     n1 = 50
     n2 = 70
@@ -317,17 +350,31 @@ def phasetrans():
     netmag2 = np.zeros(len(beta_arr))
     netmag3 = np.zeros(len(beta_arr))
 
+    netmag1_err = np.zeros(len(beta_arr))
+    netmag2_err = np.zeros(len(beta_arr))
+    netmag3_err = np.zeros(len(beta_arr))
+
     for i in tqdm(range(len(netmag1))):
         totspin1, totenergy1, totspinnob1, totenergynob1 = metropolis(init_spin1, iter, burn, j, h, beta_arr[i], energy1)
-        netmag1[i] = np.average(totspin1)/(n1*n1)
+        #netmag1[i] = np.average(totspin1)/(n1*n1)
+        # error_calculation bootstrap
+        totspin1_mean, totspin1_err = bootstrap(totspin1,num_bs)
+        netmag1[i] = totspin1_mean/(n1*n1)
+        netmag1_err[i] = totspin1_err/(n1*n1) 
 
     for i in tqdm(range(len(netmag2))):
         totspin2, totenergy2, totspinnob2, totenergynob2 = metropolis(init_spin2, iter, burn, j, h, beta_arr[i], energy2)
-        netmag2[i] = np.average(totspin2)/(n2*n2)
+        #netmag2[i] = np.average(totspin2)/(n2*n2)
+        totspin2_mean, totspin2_err = bootstrap(totspin2,num_bs)
+        netmag1[i] = totspin2_mean/(n2*n2)
+        netmag2_err[i] = totspin2_err/(n2*n2)
 
     for i in tqdm(range(len(netmag3))):
         totspin3, totenergy3, totspinnob3, totenergynob3 = metropolis(init_spin3, iter, burn, j, h, beta_arr[i], energy3)
-        netmag3[i] = np.average(totspin3)/(n3*n3)
+        #netmag3[i] = np.average(totspin3)/(n3*n3)
+        totspin3_mean, totspin3_err = bootstrap(totspin3,num_bs)
+        netmag3[i] = totspin3_mean/(n3*n3)
+        netmag3_err[i] = totspin3_err/(n3*n3)
 
     # critcal coupling J_c
     J_c = (1/2) * np.log(1 + np.sqrt(2))
@@ -356,9 +403,12 @@ def phasetrans():
         energyan[i] = e(betaan[i],m)
 
     #plot the results
-    plt.plot(beta_arr, netmag1, '.', label=f'N = {n1}')
-    plt.plot(beta_arr, netmag2, '.', label=f'N = {n2}')
-    plt.plot(beta_arr, netmag3, '.', label=f'N = {n3}')
+    plt.errorbar(beta_arr, netmag1, netmag1_err, fmt='.', capthick=1, label=f'N = {n1}')
+    plt.errorbar(beta_arr, netmag2, netmag2_err, fmt='.', capthick=1, label=f'N = {n2}')
+    plt.errorbar(beta_arr, netmag3, netmag3_err, fmt='.', capthick=1, label=f'N = {n3}')
+    #plt.plot(beta_arr, netmag1, '.', label=f'N = {n1}')
+    #plt.plot(beta_arr, netmag2, '.', label=f'N = {n2}')
+    #plt.plot(beta_arr, netmag3, '.', label=f'N = {n3}')
     plt.plot(betaan, magan, label='Analytical')
     plt.xlabel(r'Inverse Temperature ($\beta$)')
     plt.ylabel(r'Net Magnetisation (<M>) [J = 1]')
@@ -367,6 +417,91 @@ def phasetrans():
     plt.show()
 
 # -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-
+
+
+###### susceptibility and spesific heat
+
+def criticalEx():
+    beta_arr = np.linspace(0, 1, 15)
+
+    n1 = 10
+    n2 = 20
+    n3 = 40
+
+    init_random = np.random.random((n1, n1))
+    init_spin1 = np.zeros((n1, n1))
+    init_spin1[init_random >= .8] = 1
+    init_spin1[init_random < .8] = -1
+
+    init_random = np.random.random((n2, n2))
+    init_spin2 = np.zeros((n2, n2))
+    init_spin2[init_random >= .8] = 1
+    init_spin2[init_random < .8] = -1
+
+    init_random = np.random.random((n3, n3))
+    init_spin3 = np.zeros((n3, n3))
+    init_spin3[init_random >= .8] = 1
+    init_spin3[init_random < .8] = -1
+
+    energy1 = energy_toroid(init_spin1, j, h)
+    energy2 = energy_toroid(init_spin2, j, h)
+    energy3 = energy_toroid(init_spin3, j, h)
+
+    suscep1 = np.zeros(len(beta_arr))
+    suscep2 = np.zeros(len(beta_arr))
+    suscep3 = np.zeros(len(beta_arr))
+
+    suscep1_err = np.zeros(len(beta_arr))
+    suscep2_err = np.zeros(len(beta_arr))
+    suscep3_err = np.zeros(len(beta_arr))
+
+    speH1 = np.zeros(len(beta_arr))
+    speH2 = np.zeros(len(beta_arr))
+    speH3 = np.zeros(len(beta_arr))
+
+    speH1_err = np.zeros(len(beta_arr))
+    speH2_err = np.zeros(len(beta_arr))
+    speH3_err = np.zeros(len(beta_arr))
+
+
+    for i in tqdm(range(len(speH1))):
+        totspin1, totenergy1, totspinnob1, totenergynob1 = metropolis(init_spin1, iter, burn, j, h, beta_arr[i], energy1)
+        suscep1[i], suscep1_err[i] = susceptibility(totspin1,beta_arr[i])
+        speH1[i],speH1_err[i] = spesificHeat(totenergy1,beta_arr[i]) 
+
+    
+    for i in tqdm(range(len(speH2))):
+        totspin2, totenergy2, totspinnob2, totenergynob2 = metropolis(init_spin2, iter, burn, j, h, beta_arr[i], energy2)
+        suscep2[i], suscep2_err[i] = susceptibility(totspin2,beta_arr[i])
+        speH2[i],speH2_err[i] = spesificHeat(totenergy2,beta_arr[i]) 
+    
+
+    for i in tqdm(range(len(speH3))):
+        totspin3, totenergy3, totspinnob3, totenergynob3 = metropolis(init_spin3, iter, burn, j, h, beta_arr[i], energy3)
+        suscep3[i], suscep3_err[i] = susceptibility(totspin3,beta_arr[i])
+        speH3[i],speH3_err[i] = spesificHeat(totenergy3,beta_arr[i]) 
+
+
+    #plot the results
+    plt.errorbar(beta_arr, speH1, speH1_err, fmt='.', capthick=1, label=f'N = {n1}')
+    plt.errorbar(beta_arr, speH2, speH2_err, fmt='.', capthick=1, label=f'N = {n2}')
+    plt.errorbar(beta_arr, speH3, speH3_err, fmt='.', capthick=1, label=f'N = {n3}')
+    plt.xlabel(r'Inverse Temperature ($\beta$)')
+    plt.ylabel(r'spesific Heat C')
+    plt.title('spesific Heat vs. Inverse Temperature')
+    plt.legend(loc='upper left')
+    plt.show()
+
+    plt.errorbar(beta_arr, suscep1, suscep1_err, fmt='.', capthick=1, label=f'N = {n1}')
+    plt.errorbar(beta_arr, suscep2, suscep2_err, fmt='.', capthick=1, label=f'N = {n2}')
+    plt.errorbar(beta_arr, suscep3, suscep3_err, fmt='.', capthick=1, label=f'N = {n3}')
+    plt.xlabel(r'Inverse Temperature ($\beta$)')
+    plt.ylabel(r'susceptibility')
+    plt.title('magnetic Susceptibility vs. Inverse Temperature')
+    plt.legend(loc='upper left')
+    plt.show()
+#############################################
+
 
 # energy autocorrelation
 # -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-
@@ -412,11 +547,13 @@ h = 0.
 beta = 1.
 iter = 200000
 burn = 50000
+num_bs = 500 # number of bootstrap samples
 
 if __name__ == '__main__':
     # uncomment the next line to test if the algorithm is working properly
     #test()
     algobehave()
     #phasetrans()
+    criticalEx()
     #dyncritexp()
     pass
