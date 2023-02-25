@@ -1,8 +1,10 @@
 import numpy as np
 import random
 import matplotlib.pyplot as plt
+from numba import njit
 
 # Blocking / Binning the markov chain data
+@njit(nogil=True)
 def blocking(mc_data, bin_width):
     if len(mc_data) % bin_width == 0:
         N_bin = len(mc_data) // bin_width
@@ -19,9 +21,8 @@ def blocking(mc_data, bin_width):
     
     return mean_block    
 
-
-
 # bootstrap routine
+@njit(nogil=True)
 def bootstrap(data,n_bs):
     mean_bs = np.zeros(n_bs)
 
@@ -39,20 +40,21 @@ def bootstrap(data,n_bs):
         
     return np.mean(mean_bs), np.std(mean_bs)
 
-# test blocking
-obs = np.array([1,3,5,7,9,11,13,15])
-block = blocking(obs,3)
-print(block)
+if __name__=='__main__':
+    # test blocking
+    obs = np.array([1,3,5,7,9,11,13,15])
+    block = blocking(obs,3)
+    print(block)
 
-###
-num_bs = 200 # number of bootstrap samples
-bs_bin = [1,2,4,8,10,15,20,30] # used bin width
-bs_mean = np.zeros(len(bs_bin))
-bs_std = np.zeros(len(bs_bin))
-observ = np.random.normal(0,2,1000) 
+    ###
+    num_bs = 200 # number of bootstrap samples
+    bs_bin = [1,2,4,8,10,15,20,30] # used bin width
+    bs_mean = np.zeros(len(bs_bin))
+    bs_std = np.zeros(len(bs_bin))
+    observ = np.random.normal(0,2,1000) 
 
-for b_i,bin in enumerate(bs_bin):
-    mc_block = blocking(observ,bin)
-    bs_mean[b_i], bs_std[b_i] = bootstrap(mc_block, num_bs)
+    for b_i,bin in enumerate(bs_bin):
+        mc_block = blocking(observ,bin)
+        bs_mean[b_i], bs_std[b_i] = bootstrap(mc_block, num_bs)
 
-print('Mean and Std (Different Bin Widths:', bs_mean, bs_std)
+    print('Mean and Std (Different Bin Widths:', bs_mean, bs_std)
