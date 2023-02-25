@@ -132,7 +132,7 @@ def spin_autocorr_time(spins):
 
     return tau
 
-def susceptibility(data,beta,n_spin,Nbst=200):
+def susceptibility(data,beta,n_spin,Nbst=1000):
     Nconf = data.shape
     sampleMeans = np.zeros(Nbst)
     
@@ -141,12 +141,12 @@ def susceptibility(data,beta,n_spin,Nbst=200):
         
         sample = data[idx]
         
-        sampleMeans[k] = beta * ( np.mean(sample**2) - np.mean(sample)**2 ) / (n_spin**2)
+        sampleMeans[k] = (beta * ( np.mean(sample**2) - np.mean(sample)**2 )) / (n_spin**2)
         
     return np.mean(sampleMeans), np.std(sampleMeans)
 
 
-def spesificHeat(data,beta,n_spin,Nbst=200):
+def spesificHeat(data,beta,n_spin,Nbst=1000):
      
     Nconf = data.shape
     sampleMeans = np.zeros(Nbst)
@@ -156,7 +156,7 @@ def spesificHeat(data,beta,n_spin,Nbst=200):
         
         sample = data[idx]
         
-        sampleMeans[k] = beta**2 * ( np.mean(sample**2) - np.mean(sample)**2 ) / (n_spin**2)
+        sampleMeans[k] = (beta**2 * ( np.mean(sample**2) - np.mean(sample)**2 )) / (n_spin**2)
         
     return np.mean(sampleMeans), np.std(sampleMeans)    
 
@@ -432,9 +432,9 @@ def magphasetrans():
 def chiphasetrans():
     beta_arr = np.linspace(0, 1, 50)
 
-    n1 = 50
-    n2 = 70
-    n3 = 90
+    n1 = 10
+    n2 = 30
+    n3 = 60
 
     init_random = np.random.random((n1, n1))
     init_spin1 = np.zeros((n1, n1))
@@ -486,11 +486,11 @@ def chiphasetrans():
 ###### susceptibility and spesific heat
 
 def criticalEx():
-    beta_arr = np.linspace(0, 1, 25)
+    beta_arr = np.linspace(0, 1, 40)
 
     n1 = 10
     n2 = 20
-    n3 = 40
+    n3 = 60
 
     init_random = np.random.random((n1, n1))
     init_spin1 = np.zeros((n1, n1))
@@ -530,21 +530,20 @@ def criticalEx():
     
     for i in tqdm(range(len(speH1))):
         totspin1, totenergy1, totspinnob1, totenergynob1, sus1 = metropolis(init_spin1, iter, burn, j, h, beta_arr[i], energy1)
-        suscep1[i], suscep1_err[i] = susceptibility(totspin1,beta_arr[i],n1) 
+        #suscep1[i], suscep1_err[i] = susceptibility(totspin1,beta_arr[i],n1) 
         speH1[i],speH1_err[i] = spesificHeat(totenergy1,beta_arr[i],n1) 
 
     
     for i in tqdm(range(len(speH2))):
         totspin2, totenergy2, totspinnob2, totenergynob2, sus2 = metropolis(init_spin2, iter, burn, j, h, beta_arr[i], energy2)
-        suscep2[i], suscep2_err[i] = susceptibility(totspin2,beta_arr[i],n2) 
+        #suscep2[i], suscep2_err[i] = susceptibility(totspin2,beta_arr[i],n2) 
         speH2[i],speH2_err[i] = spesificHeat(totenergy2,beta_arr[i],n2)  
     
 
     for i in tqdm(range(len(speH3))):
         totspin3, totenergy3, totspinnob3, totenergynob3, sus3 = metropolis(init_spin3, iter, burn, j, h, beta_arr[i], energy3)
-        suscep3[i], suscep3_err[i] = susceptibility(totspin3,beta_arr[i],n3) 
+        #suscep3[i], suscep3_err[i] = susceptibility(totspin3,beta_arr[i],n3) 
         speH3[i],speH3_err[i] = spesificHeat(totenergy3,beta_arr[i],n3) 
-    
 
 ###### analytical spesific heat
     def specificHeat_exact(J):
