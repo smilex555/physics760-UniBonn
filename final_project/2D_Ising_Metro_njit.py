@@ -297,7 +297,6 @@ def algobehave():
     plt.plot(spins1/(n1*n1), label=f'N = {n1}')
     plt.plot(spins2/(n2*n2), label=f'N = {n2}')
     plt.plot(spins3/(n3*n3), label=f'N = {n3}')
-    plt.axvline(x=burn, color='r', linestyle='-', label='Burn-in')
     plt.xlabel('Algorithm Time Steps')
     plt.ylabel('Net Magnetisation (<M>) [J=1]')
     plt.title('Net Magnetisation vs. Algorithm Time Steps')
@@ -308,7 +307,6 @@ def algobehave():
     plt.plot(energies1/(n1*n1), label=f'N = {n1}')
     plt.plot(energies2/(n2*n2), label=f'N = {n2}')
     plt.plot(energies3/(n3*n3), label=f'N = {n3}')
-    plt.axvline(x=burn, color='r', linestyle='-', label='Burn-in')
     plt.xlabel('Algorithm Time Steps')
     plt.ylabel('Energy per site [J=1]')
     plt.title('Energy per site vs. Algorithm Time Steps')
@@ -329,18 +327,18 @@ def phasetrans():
 
     init_random = np.random.random((n1, n1))
     init_spin1 = np.zeros((n1, n1))
-    init_spin1[init_random >= .8] = 1
-    init_spin1[init_random < .8] = -1
+    init_spin1[init_random >= .8] = -1
+    init_spin1[init_random < .8] = 1
 
     init_random = np.random.random((n2, n2))
     init_spin2 = np.zeros((n2, n2))
-    init_spin2[init_random >= .8] = 1
-    init_spin2[init_random < .8] = -1
+    init_spin2[init_random >= .8] = -1
+    init_spin2[init_random < .8] = 1
 
     init_random = np.random.random((n3, n3))
     init_spin3 = np.zeros((n3, n3))
-    init_spin3[init_random >= .8] = 1
-    init_spin3[init_random < .8] = -1
+    init_spin3[init_random >= .8] = -1
+    init_spin3[init_random < .8] = 1
 
     energy1 = energy_toroid(init_spin1, j, h)
     energy2 = energy_toroid(init_spin2, j, h)
@@ -506,7 +504,7 @@ def criticalEx():
 # energy autocorrelation
 # -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-
 def dyncritexp():
-    n_array = np.arange(5, 51, 2)
+    n_array = np.arange(5, 151, 2)
 
     autocorrtime = np.zeros(len(n_array))
     for i in tqdm(range(len(n_array))):
@@ -528,18 +526,19 @@ def dyncritexp():
     if not np.all(np.isnan(autocorrtime)):
         popt, pcov = curve_fit(fitf, np.log(n_array), np.log(autocorrtime))
         print('Fit slope:', np.round(popt[0], 2))
-
+  
         # plot the results
         xrange = np.linspace(np.min(np.log(n_array)), np.max(np.log(n_array)), 20)
-        plt.plot(np.log(n_array), np.log(autocorrtime), '.')
-        plt.plot(xrange, fitf(xrange, *popt))
+        plt.plot(np.log(n_array), np.log(autocorrtime), '.', label='data')
+        plt.plot(xrange, fitf(xrange, *popt), label='fit')
         plt.title(r'$log(\tau)$ vs. log(Lattice size)')
         plt.xlabel('log(Lattice size)')
         plt.ylabel(r'$log(\tau)$')
+        plt.legend()
+        plt.grid()
         plt.show()
 
 # -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-
-
 
 # init values
 j = 1.
@@ -550,9 +549,9 @@ burn = 50000
 num_bs = 500 # number of bootstrap samples
 
 if __name__ == '__main__':
-    # uncomment the next line to test if the algorithm is working properly
+    # uncomment the next lines to run a specific part of the code
     #test()
-    algobehave()
+    #algobehave()
     #phasetrans()
     criticalEx()
     #dyncritexp()
