@@ -200,5 +200,5 @@ if not np.all(np.isnan(autocorrtime)):
     plt.plot(xrange, fitf(xrange, *popt))
     plt.title(r'$log(\tau)$ vs. log(Lattice size)')
     plt.xlabel('log(Lattice size)')
-    plt.ylabel(r'$log(\tau)')
+    plt.ylabel(r'$log(\tau)$')
     plt.show()
