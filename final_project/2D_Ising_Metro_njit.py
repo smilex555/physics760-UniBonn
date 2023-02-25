@@ -417,5 +417,5 @@ if __name__ == '__main__':
     #test()
     #algobehave()
     #phasetrans()
-    dyncritexp()
+    #dyncritexp()
     pass
