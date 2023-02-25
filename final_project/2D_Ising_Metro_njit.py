@@ -133,7 +133,7 @@ def spin_autocorr_time(spins):
 
     return tau
 
-def susceptibility(data,beta,Nbst=200):
+def susceptibility(data,beta,n_spin,Nbst=200):
     Nconf = data.shape
     sampleMeans = np.zeros(Nbst)
     
@@ -142,12 +142,12 @@ def susceptibility(data,beta,Nbst=200):
         
         sample = data[idx]
         
-        sampleMeans[k] = beta * ( np.mean(sample**2) - np.mean(sample)**2 )
+        sampleMeans[k] = beta * ( np.mean(sample**2) - np.mean(sample)**2 ) / (n_spin**2)
         
     return np.mean(sampleMeans), np.std(sampleMeans)
 
 
-def spesificHeat(data,beta,Nbst=200):
+def spesificHeat(data,beta,n_spin,Nbst=200):
      
     Nconf = data.shape
     sampleMeans = np.zeros(Nbst)
@@ -157,7 +157,7 @@ def spesificHeat(data,beta,Nbst=200):
         
         sample = data[idx]
         
-        sampleMeans[k] = beta**2 * ( np.mean(sample**2) - np.mean(sample)**2 )
+        sampleMeans[k] = beta**2 * ( np.mean(sample**2) - np.mean(sample)**2 ) / (n_spin**2)
         
     return np.mean(sampleMeans), np.std(sampleMeans)    
 
@@ -320,9 +320,9 @@ def algobehave():
 def magphasetrans():
     beta_arr = np.linspace(0, 1, 50)
 
-    n1 = 50
-    n2 = 70
-    n3 = 90
+    n1 = 20
+    n2 = 40
+    n3 = 60
 
     init_random = np.random.random((n1, n1))
     init_spin1 = np.zeros((n1, n1))
@@ -351,6 +351,7 @@ def magphasetrans():
     netmag2_err = np.zeros(len(beta_arr))
     netmag3_err = np.zeros(len(beta_arr))
 
+    '''
     for i in tqdm(range(len(netmag1))):
         totspin1, totenergy1, totspinnob1, totenergynob1, sus1 = metropolis(init_spin1, iter, burn, j, h, beta_arr[i], energy1)
         netmag1[i] = np.average(totspin1)/(n1*n1)
@@ -362,27 +363,30 @@ def magphasetrans():
     for i in tqdm(range(len(netmag3))):
         totspin3, totenergy3, totspinnob3, totenergynob3, sus3 = metropolis(init_spin3, iter, burn, j, h, beta_arr[i], energy3)
         netmag3[i] = np.average(totspin3)/(n3*n3)
-        totspin1, totenergy1, totspinnob1, totenergynob1 = metropolis(init_spin1, iter, burn, j, h, beta_arr[i], energy1)
+    '''
+       
+    for i in tqdm(range(len(netmag1))):  
+        totspin1, totenergy1, totspinnob1, totenergynob1, sus1 = metropolis(init_spin1, iter, burn, j, h, beta_arr[i], energy1)
         #netmag1[i] = np.average(totspin1)/(n1*n1)
         # error_calculation bootstrap
         totspin1_mean, totspin1_err = bootstrap(totspin1,num_bs)
         netmag1[i] = totspin1_mean/(n1*n1)
-        netmag1_err[i] = totspin1_err/(n1*n1) 
-
+        netmag1_err[i] = totspin1_err/(n1*n1)
+         
     for i in tqdm(range(len(netmag2))):
-        totspin2, totenergy2, totspinnob2, totenergynob2 = metropolis(init_spin2, iter, burn, j, h, beta_arr[i], energy2)
+        totspin2, totenergy2, totspinnob2, totenergynob2, sus2 = metropolis(init_spin2, iter, burn, j, h, beta_arr[i], energy2)
         #netmag2[i] = np.average(totspin2)/(n2*n2)
         totspin2_mean, totspin2_err = bootstrap(totspin2,num_bs)
-        netmag1[i] = totspin2_mean/(n2*n2)
+        netmag2[i] = totspin2_mean/(n2*n2)
         netmag2_err[i] = totspin2_err/(n2*n2)
 
     for i in tqdm(range(len(netmag3))):
-        totspin3, totenergy3, totspinnob3, totenergynob3 = metropolis(init_spin3, iter, burn, j, h, beta_arr[i], energy3)
+        totspin3, totenergy3, totspinnob3, totenergynob3, sus3 = metropolis(init_spin3, iter, burn, j, h, beta_arr[i], energy3)
         #netmag3[i] = np.average(totspin3)/(n3*n3)
         totspin3_mean, totspin3_err = bootstrap(totspin3,num_bs)
         netmag3[i] = totspin3_mean/(n3*n3)
         netmag3_err[i] = totspin3_err/(n3*n3)
-
+    
     # critcal coupling J_c
     J_c = (1/2) * np.log(1 + np.sqrt(2))
 
@@ -527,20 +531,20 @@ def criticalEx():
 
     for i in tqdm(range(len(speH1))):
         totspin1, totenergy1, totspinnob1, totenergynob1 = metropolis(init_spin1, iter, burn, j, h, beta_arr[i], energy1)
-        suscep1[i], suscep1_err[i] = susceptibility(totspin1,beta_arr[i])
-        speH1[i],speH1_err[i] = spesificHeat(totenergy1,beta_arr[i]) 
+        suscep1[i], suscep1_err[i] = susceptibility(totspin1,beta_arr[i],n1) 
+        speH1[i],speH1_err[i] = spesificHeat(totenergy1,beta_arr[i],n1) 
 
     
     for i in tqdm(range(len(speH2))):
         totspin2, totenergy2, totspinnob2, totenergynob2 = metropolis(init_spin2, iter, burn, j, h, beta_arr[i], energy2)
-        suscep2[i], suscep2_err[i] = susceptibility(totspin2,beta_arr[i])
-        speH2[i],speH2_err[i] = spesificHeat(totenergy2,beta_arr[i]) 
+        suscep2[i], suscep2_err[i] = susceptibility(totspin2,beta_arr[i],n2) 
+        speH2[i],speH2_err[i] = spesificHeat(totenergy2,beta_arr[i],n2)  
     
 
     for i in tqdm(range(len(speH3))):
         totspin3, totenergy3, totspinnob3, totenergynob3 = metropolis(init_spin3, iter, burn, j, h, beta_arr[i], energy3)
-        suscep3[i], suscep3_err[i] = susceptibility(totspin3,beta_arr[i])
-        speH3[i],speH3_err[i] = spesificHeat(totenergy3,beta_arr[i]) 
+        suscep3[i], suscep3_err[i] = susceptibility(totspin3,beta_arr[i],n3) 
+        speH3[i],speH3_err[i] = spesificHeat(totenergy3,beta_arr[i],n3) 
 
 
     #plot the results
@@ -609,13 +613,13 @@ h = 0.
 beta = 1.
 iter = 200000
 burn = 50000
-num_bs = 500 # number of bootstrap samples
+num_bs = 2000 # number of bootstrap samples
 
 if __name__ == '__main__':
     # uncomment the next lines to run a specific part of the code
     #test()
     #algobehave()
-    #magphasetrans()
+    magphasetrans()
     #chiphasetrans()
     #dyncritexp()
     pass
