@@ -408,7 +408,7 @@ j = 1.
 h = 0.
 beta = 1.
 iter = 100000
-burn = 50000
+burn = 30000
 
 if __name__ == '__main__':
     # uncomment the next lines to run a specific part of the code
