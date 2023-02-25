@@ -392,6 +392,7 @@ def dyncritexp():
         popt, pcov = curve_fit(fitf, np.log(n_array), np.log(autocorrtime))
         print('Fit slope:', np.round(popt[0], 2))
 
+                
         # plot the results
         xrange = np.linspace(np.min(np.log(n_array)), np.max(np.log(n_array)), 20)
         plt.plot(np.log(n_array), np.log(autocorrtime), '.', label='data')
@@ -399,6 +400,8 @@ def dyncritexp():
         plt.title(r'$log(\tau)$ vs. log(Lattice size)')
         plt.xlabel('log(Lattice size)')
         plt.ylabel(r'$log(\tau)$')
+        plt.legend()
+        plt.grid()
         plt.show()
 
 # -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-
