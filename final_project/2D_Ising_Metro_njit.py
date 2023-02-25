@@ -391,8 +391,7 @@ def dyncritexp():
     if not np.all(np.isnan(autocorrtime)):
         popt, pcov = curve_fit(fitf, np.log(n_array), np.log(autocorrtime))
         print('Fit slope:', np.round(popt[0], 2))
-
-                
+  
         # plot the results
         xrange = np.linspace(np.min(np.log(n_array)), np.max(np.log(n_array)), 20)
         plt.plot(np.log(n_array), np.log(autocorrtime), '.', label='data')
