@@ -1,10 +1,11 @@
 #!/usr/bin/python
 # libraries
 import numpy as np
-import random
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from scipy.optimize import curve_fit
+from scipy import special
+from mpmath import mp
 from numba import njit
 import time
 from tqdm import tqdm
@@ -102,6 +103,7 @@ def metropolis(spin_config, iterations, burnin, J, h, beta, energy):
     # return the arrays of total spins and energies over the iterations and the final spin config 
     return tot_spins, tot_energy, tot_spins_noburnin, tot_energy_noburnin
 
+#function to calculate the spin autocorrelation time, given an array of net spins about MC time
 def spin_autocorr_time(spins):
     '''
     Calculate the spin autocorrelation time for an Ising model from a series of net spin values.
@@ -129,7 +131,7 @@ def spin_autocorr_time(spins):
     return tau
 
 # init values
-N = 50 
+N = 20
 j = 1.
 h = 0.
 beta = 1.
@@ -241,37 +243,75 @@ plt.show()
 
 beta_arr = np.linspace(0, 1, 50)
 
-netmag_p = np.zeros(len(beta_arr))
-for i in tqdm(range(len(netmag_p))):
-    totspin, totenergy, totspinnob, totenergynob = metropolis(lattice_p, iter, burn, j, h, beta_arr[i], energy_p)
-    netmag_p[i] = np.average(totspin)/(N*N)
+n1 = 50
+n2 = 70
+n3 = 90
+init_spin1 = np.random.choice([1], (n1, n1))
+init_spin2 = np.random.choice([1], (n2, n2))
+init_spin3 = np.random.choice([1], (n3, n3))
+energy1 = energy_toroid(init_spin1, j, h)
+energy2 = energy_toroid(init_spin2, j, h)
+energy3 = energy_toroid(init_spin3, j, h)
 
-netmag_n = np.zeros(len(beta_arr))
-for i in tqdm(range(len(netmag_n))):
-    totspin, totenergy, totspinnob, totenergynob = metropolis(lattice_p, iter, burn, j, h, beta_arr[i], energy_p)
-    netmag_n[i] = np.average(totspin)/(N*N)
+netmag1 = np.zeros(len(beta_arr))
+netmag2 = np.zeros(len(beta_arr))
+netmag3 = np.zeros(len(beta_arr))
+
+for i in tqdm(range(len(netmag1))):
+    totspin1, totenergy1, totspinnob1, totenergynob1 = metropolis(init_spin1, iter, burn, j, h, beta_arr[i], energy1)
+    netmag1[i] = np.average(totspin1)/(n1*n1)
+
+for i in tqdm(range(len(netmag2))):
+    totspin2, totenergy2, totspinnob2, totenergynob2 = metropolis(init_spin2, iter, burn, j, h, beta_arr[i], energy2)
+    netmag2[i] = np.average(totspin2)/(n2*n2)
+
+for i in tqdm(range(len(netmag3))):
+    totspin3, totenergy3, totspinnob3, totenergynob3 = metropolis(init_spin3, iter, burn, j, h, beta_arr[i], energy3)
+    netmag3[i] = np.average(totspin3)/(n3*n3)
+
+# critcal coupling J_c
+J_c = (1/2) * np.log(1 + np.sqrt(2))
+
+# abs magnetization per site with h=0 in thermodynamic limit
+def abs_mag(J):
+    if J > J_c:
+        return (1 - (1/np.sinh(2*J)**4))**(1/8)
+    else:
+        return 0
+
+def K(m):
+    return special.ellipk(m)
+
+# energy per site with h=0
+def e(J,m):
+    return - J * mp.coth(2*J) * ( 1 + (2/np.pi)*(2*np.tanh(2*J)**2 - 1)*K(m)*(4*mp.sech(2*J)**2 * np.tanh(2*J)**2)) 
+
+betaan = np.linspace(0.01, 1, 50)
+energyan = np.zeros(len(betaan))
+magan = np.zeros(len(betaan))
+# loop over J and calculate energy and abs_magnetization
+for i in range(len(betaan)):
+    m = abs_mag(betaan[i]) 
+    magan[i] = m
+    energyan[i] = e(betaan[i],m)
 
 #plot the results
-fig, axes = plt.subplots(1, 2, figsize=(12,4))
-ax = axes[0]
-ax.plot(beta_arr, netmag_p, '.')
-ax.set_xlabel(r'$\beta$')
-ax.set_ylabel(r'Net Magnetisation $\bar{m}$')
-ax.grid()
-ax = axes[1]
-ax.plot(beta_arr, netmag_n, '.')
-ax.set_xlabel(r'$\beta$')
-ax.set_ylabel(r'Net Magnetisation $\bar{m}$')
-ax.grid()
-fig.tight_layout()
-fig.suptitle(r'Net Magnetisation vs. $\beta$', y=1, size=12)
+plt.plot(beta_arr, netmag1, '.', label=f'N = {n1}')
+plt.plot(beta_arr, netmag2, '.', label=f'N = {n2}')
+plt.plot(beta_arr, netmag3, '.', label=f'N = {n3}')
+plt.plot(betaan, magan, label='Analytical')
+plt.xlabel(r'Inverse Temperature ($\beta$)')
+plt.ylabel(r'Net Magnetisation (<M>) [J = 1]')
+plt.title('Net Magnetisation vs. Inverse Temperature')
+plt.legend(loc='upper left')
 plt.show()
+
 # -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-
 
 # energy autocorrelation
 # -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-
 
-n_array = np.arange(5, 151, 2)
+n_array = np.arange(5, 51, 2)
 
 autocorrtime = np.zeros(len(n_array))
 for i in tqdm(range(len(n_array))):
@@ -300,79 +340,7 @@ if not np.all(np.isnan(autocorrtime)):
     plt.plot(xrange, fitf(xrange, *popt))
     plt.title(r'$log(\tau)$ vs. log(Lattice size)')
     plt.xlabel('log(Lattice size)')
-    plt.ylabel(r'$log(\tau)')
+    plt.ylabel(r'$log(\tau)$')
     plt.show()
 
 # -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-
-
-# worm algorithm
-# -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-
-
-@njit(nogil=True)
-def worm(spin_config, iterations, burnin, J, h, beta, energy):
-    N = len(spin_config)
-    tot_spins = np.zeros(iterations)
-    tot_energy = np.zeros(iterations)
-    #insert burnin
-
-    spin_config = spin_config.copy()
-    for step in range(iterations):
-        x, y = np.random.randint(N), np.random.randint(N)
-        worm = np.array([[x, y]])
-        tail = np.array([[x, y]])
-        neighbours = np.array([[1, 0], [-1, 0], [0, 1], [0, -1]])
-        while True:
-            # move the head
-            while True:
-                dir = np.random.choice(np.array([-1, 0, 1]), 2)
-                if np.any((neighbours[:, 0] == dir[0])*(neighbours[:, 1] == dir[1])): break
-            xnew, ynew = x+dir[0], y+dir[1]
-            codi = np.array([[xnew, ynew]])
-            if (xnew > N-1) or (ynew > N-1) or (xnew < 0) or (ynew < 0): break
-            elif (xnew == tail[0, 0])*(ynew == tail[0, 1]): break
-            elif spin_config[xnew, ynew] == spin_config[x, y]:
-                if not np.any((worm[:, 0] == codi[0, 0])*(worm[:, 1] == codi[0, 1])):
-                    worm = np.append(worm, codi, axis = 0)
-                    x, y = xnew, ynew
-                else:
-                    index = np.where((worm[:, 0] == codi[0, 0])*(worm[:, 1] == codi[0, 1]))[0]
-                    if index[0] == len(worm) - 2:
-                        x, y = worm[index[0]][0], worm[index[0]][1]
-                    else:
-                        if np.random.random() < 0.5:
-                            x, y = worm[index[0] - 1][0], worm[index[0] - 1][1]
-                        else:
-                            x, y = worm[index[0] + 1][0], worm[index[0] + 1][1]
-            else:
-                # check energy cost of flipping
-                spin_i = spin_config[xnew, ynew]
-                spin_f = -1*spin_i
-                E_i = 0
-                E_f = 0
-                E_i += -J*spin_i*spin_config[(xnew-1)%N, ynew]
-                E_i += -J*spin_i*spin_config[(xnew+1)%N, ynew]
-                E_i += -J*spin_i*spin_config[xnew, (ynew-1)%N]
-                E_i += -J*spin_i*spin_config[xnew, (ynew+1)%N]
-                E_i += -h*spin_i
-                E_f += -J*spin_f*spin_config[(xnew-1)%N, ynew]
-                E_f += -J*spin_f*spin_config[(xnew+1)%N, ynew]
-                E_f += -J*spin_f*spin_config[xnew, (ynew-1)%N]
-                E_f += -J*spin_f*spin_config[xnew, (ynew+1)%N]
-                E_f += -h*spin_f
-                dE = E_f - E_i
-                if (dE>0)*(np.random.random() < np.exp(-beta*dE)):
-                    energy += dE
-                    worm = np.append(worm, codi, axis = 0)
-                    spin_config[xnew, ynew] = spin_f
-                    x, y = xnew, ynew
-                elif dE<=0:
-                    spin_config[xnew, ynew] = spin_f
-                    energy += dE
-                    worm = np.append(worm, codi, axis = 0)
-                    x, y = xnew, ynew
-                else: break
-        
-        tot_spins[step] = np.sum(spin_config)
-        tot_energy[step] = energy 
-
-    return tot_spins, tot_energy
