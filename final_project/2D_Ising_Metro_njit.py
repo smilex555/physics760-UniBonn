@@ -317,11 +317,11 @@ def algobehave():
 # mag phase transition
 # -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-
 def magphasetrans():
-    beta_arr = np.linspace(0, 1, 50)
+    beta_arr = np.linspace(0, 1, 70)
 
-    n1 = 20
-    n2 = 40
-    n3 = 60
+    n1 = 30
+    n2 = 50
+    n3 = 70
 
     init_random = np.random.random((n1, n1))
     init_spin1 = np.zeros((n1, n1))
@@ -624,8 +624,8 @@ def dyncritexp():
 j = 1.
 h = 0.
 beta = 1.
-iter = 200000
-burn = 50000
+iter = 100000
+burn = 30000
 num_bs = 2000 # number of bootstrap samples
 
 if __name__ == '__main__':
