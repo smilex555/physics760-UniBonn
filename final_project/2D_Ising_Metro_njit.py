@@ -319,13 +319,8 @@ def algobehave():
 
 # mag phase transition
 # -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-
-<<<<<<< HEAD
 def magphasetrans():
     beta_arr = np.linspace(0, 1, 50)
-=======
-def phasetrans():
-    beta_arr = np.linspace(0, 1, 25)
->>>>>>> 5d1ea08a7a426b40266a81bc49271902bf9e84c7
 
     n1 = 50
     n2 = 70
@@ -359,7 +354,6 @@ def phasetrans():
     netmag3_err = np.zeros(len(beta_arr))
 
     for i in tqdm(range(len(netmag1))):
-<<<<<<< HEAD
         totspin1, totenergy1, totspinnob1, totenergynob1, sus1 = metropolis(init_spin1, iter, burn, j, h, beta_arr[i], energy1)
         netmag1[i] = np.average(totspin1)/(n1*n1)
 
@@ -370,7 +364,6 @@ def phasetrans():
     for i in tqdm(range(len(netmag3))):
         totspin3, totenergy3, totspinnob3, totenergynob3, sus3 = metropolis(init_spin3, iter, burn, j, h, beta_arr[i], energy3)
         netmag3[i] = np.average(totspin3)/(n3*n3)
-=======
         totspin1, totenergy1, totspinnob1, totenergynob1 = metropolis(init_spin1, iter, burn, j, h, beta_arr[i], energy1)
         #netmag1[i] = np.average(totspin1)/(n1*n1)
         # error_calculation bootstrap
@@ -391,7 +384,6 @@ def phasetrans():
         totspin3_mean, totspin3_err = bootstrap(totspin3,num_bs)
         netmag3[i] = totspin3_mean/(n3*n3)
         netmag3_err[i] = totspin3_err/(n3*n3)
->>>>>>> 5d1ea08a7a426b40266a81bc49271902bf9e84c7
 
     # critcal coupling J_c
     J_c = (1/2) * np.log(1 + np.sqrt(2))
@@ -625,12 +617,7 @@ if __name__ == '__main__':
     # uncomment the next lines to run a specific part of the code
     #test()
     #algobehave()
-<<<<<<< HEAD
     #magphasetrans()
-    chiphasetrans()
-=======
-    #phasetrans()
-    criticalEx()
->>>>>>> 5d1ea08a7a426b40266a81bc49271902bf9e84c7
+    #chiphasetrans()
     #dyncritexp()
     pass
