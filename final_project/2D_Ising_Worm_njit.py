@@ -134,16 +134,6 @@ def worm(spin_config, iterations, burnin, J, h, beta, energy):
 
     return tot_spins, tot_energy
 
-latsize = 20
-
-init_spin = np.random.choice([1, -1], (latsize, latsize))
-
-energy_t = energy_toroid(init_spin, 1., 0.)
-spins, nrg = worm(init_spin, 70000, 30000, 1., 0, 1., energy_t)
-
-plt.plot(spins/(latsize*latsize))
-plt.show()
-
 def spin_autocorr_time(spins):
     '''
     Calculate the spin autocorrelation time for an Ising model from a series of net spin values.
@@ -170,35 +160,50 @@ def spin_autocorr_time(spins):
 
     return tau
 
-n_array = np.arange(5, 41, 2)
+latsize = 20
 
-autocorrtime = np.zeros(len(n_array))
-for i in tqdm(range(len(n_array))):
-    init_random = np.random.random((n_array[i], n_array[i]))
-    lattice = np.zeros((n_array[i], n_array[i]))
-    lattice[init_random <= .8] = 1
-    lattice[init_random > .8] = -1
-    energy_t = energy_toroid(lattice, 1, 0)
-    totspin, totenergy = worm(lattice, 100000, 0, 1, 0, 1, energy_t)
-    autocorrtime[i] = spin_autocorr_time(totspin)
+init_spin = np.random.choice([1, -1], (latsize, latsize))
+
+energy_t = energy_toroid(init_spin, 1., 0.)
+spins, nrg = worm(init_spin, 70000, 30000, 1., 0, 1., energy_t)
+
+plt.plot(spins/(latsize*latsize))
+plt.show()
+
+def dyncritexp():
+    n_array = np.arange(5, 151, 2)
+
+    autocorrtime = np.zeros(len(n_array))
+    for i in tqdm(range(len(n_array))):
+        init_random = np.random.random((n_array[i], n_array[i]))
+        lattice = np.zeros((n_array[i], n_array[i]))
+        lattice[init_random <= .8] = 1
+        lattice[init_random > .8] = -1
+        energy_t = energy_toroid(lattice, 1, 0)
+        totspin, totenergy = worm(lattice, 100000, 0, 1, 0, 1, energy_t)
+        autocorrtime[i] = spin_autocorr_time(totspin)
 
 
-# fit to verify tau-lattice size scaling
-def fitf(x, m, c):
-    return m*x + c
+    # fit to verify tau-lattice size scaling
+    def fitf(x, m, c):
+        return m*x + c
 
-if np.all(np.isnan(autocorrtime)):
-    print('Not enough Iterations!')
+    if np.all(np.isnan(autocorrtime)):
+        print('Not enough Iterations!')
 
-if not np.all(np.isnan(autocorrtime)):
-    popt, pcov = curve_fit(fitf, np.log(n_array), np.log(autocorrtime))
-    print('Fit slope:', np.round(popt[0], 2))
+    if not np.all(np.isnan(autocorrtime)):
+        popt, pcov = curve_fit(fitf, np.log(n_array), np.log(autocorrtime))
+        print('Fit slope:', np.round(popt[0], 2))
 
-    # plot the results
-    xrange = np.linspace(np.min(np.log(n_array)), np.max(np.log(n_array)), 20)
-    plt.plot(np.log(n_array), np.log(autocorrtime), '.')
-    plt.plot(xrange, fitf(xrange, *popt))
-    plt.title(r'$log(\tau)$ vs. log(Lattice size)')
-    plt.xlabel('log(Lattice size)')
-    plt.ylabel(r'$log(\tau)$')
-    plt.show()
+        # plot the results
+        xrange = np.linspace(np.min(np.log(n_array)), np.max(np.log(n_array)), 20)
+        plt.plot(np.log(n_array), np.log(autocorrtime), '.')
+        plt.plot(xrange, fitf(xrange, *popt))
+        plt.title(r'$log(\tau)$ vs. log(Lattice size)')
+        plt.xlabel('log(Lattice size)')
+        plt.ylabel(r'$log(\tau)$')
+        plt.show()
+
+if __name__=='__main__':
+    dyncritexp()
+    pass

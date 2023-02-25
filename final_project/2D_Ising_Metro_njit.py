@@ -317,7 +317,7 @@ def algobehave():
 # mag phase transition
 # -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-
 def magphasetrans():
-    beta_arr = np.linspace(0, 1, 50)
+    beta_arr = np.linspace(0, 1, 70)
 
     n1 = 30
     n2 = 50
