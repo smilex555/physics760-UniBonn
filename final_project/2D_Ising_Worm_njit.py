@@ -160,15 +160,65 @@ def spin_autocorr_time(spins):
 
     return tau
 
-latsize = 20
+def test():
+    latsize = 20
 
-init_spin = np.random.choice([1, -1], (latsize, latsize))
+    init_spin = np.random.choice([1, -1], (latsize, latsize))
 
-energy_t = energy_toroid(init_spin, 1., 0.)
-spins, nrg = worm(init_spin, 70000, 30000, 1., 0, 1., energy_t)
+    energy_t = energy_toroid(init_spin, 1., 0.)
+    spins, nrg = worm(init_spin, 70000, 30000, 1., 0, 1., energy_t)
 
-plt.plot(spins/(latsize*latsize))
-plt.show()
+    plt.plot(spins/(latsize*latsize))
+    plt.show()
+
+def algobehave():
+    n1 = 50
+    n2 = 70
+    n3 = 90
+
+    init_random = np.random.random((n1, n1))
+    init_spin1 = np.zeros((n1, n1))
+    init_spin1[init_random >= .8] = -1
+    init_spin1[init_random < .8] = 1
+
+    init_random = np.random.random((n2, n2))
+    init_spin2 = np.zeros((n2, n2))
+    init_spin2[init_random >= .8] = -1
+    init_spin2[init_random < .8] = 1
+
+    init_random = np.random.random((n3, n3))
+    init_spin3 = np.zeros((n3, n3))
+    init_spin3[init_random >= .8] = -1
+    init_spin3[init_random < .8] = 1
+
+    energy1 = energy_toroid(init_spin1, j, h)
+    energy2 = energy_toroid(init_spin2, j, h)
+    energy3 = energy_toroid(init_spin3, j, h)
+
+    spins1, energies1 = worm(init_spin1, iter, burn, j, h, beta, energy1)
+    spins2, energies2 = worm(init_spin2, iter, burn, j, h, beta, energy2)
+    spins3, energies3 = worm(init_spin3, iter, burn, j, h, beta, energy3)
+
+
+    plt.plot(spins1/(n1*n1), label=f'N = {n1}')
+    plt.plot(spins2/(n2*n2), label=f'N = {n2}')
+    plt.plot(spins3/(n3*n3), label=f'N = {n3}')
+    plt.xlabel('Algorithm Time Steps')
+    plt.ylabel('Net Magnetisation (<M>) [J=1]')
+    plt.title('Net Magnetisation vs. Algorithm Time Steps')
+    plt.legend(loc='lower right')
+    plt.grid()
+    plt.show()
+
+    plt.plot(energies1/(n1*n1), label=f'N = {n1}')
+    plt.plot(energies2/(n2*n2), label=f'N = {n2}')
+    plt.plot(energies3/(n3*n3), label=f'N = {n3}')
+    plt.xlabel('Algorithm Time Steps')
+    plt.ylabel('Energy per site [J=1]')
+    plt.title('Energy per site vs. Algorithm Time Steps')
+    plt.legend(loc='upper right')
+    plt.grid()
+    plt.show()
 
 def dyncritexp():
     n_array = np.arange(5, 151, 2)
@@ -180,7 +230,7 @@ def dyncritexp():
         lattice[init_random <= .8] = 1
         lattice[init_random > .8] = -1
         energy_t = energy_toroid(lattice, 1, 0)
-        totspin, totenergy = worm(lattice, 100000, 0, 1, 0, 1, energy_t)
+        totspin, totenergy = worm(lattice, iter, burn, j, h, beta, energy_t)
         autocorrtime[i] = spin_autocorr_time(totspin)
 
 
@@ -206,6 +256,14 @@ def dyncritexp():
         plt.grid()
         plt.show()
 
+iter = 100000
+burn = 30000
+j = 1
+h = 0
+beta = 1
+
 if __name__=='__main__':
-    dyncritexp()
+    #test()
+    #algobehave()
+    #dyncritexp()
     pass
