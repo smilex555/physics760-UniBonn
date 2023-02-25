@@ -197,11 +197,13 @@ def dyncritexp():
 
         # plot the results
         xrange = np.linspace(np.min(np.log(n_array)), np.max(np.log(n_array)), 20)
-        plt.plot(np.log(n_array), np.log(autocorrtime), '.')
-        plt.plot(xrange, fitf(xrange, *popt))
+        plt.plot(np.log(n_array), np.log(autocorrtime), '.', label='data')
+        plt.plot(xrange, fitf(xrange, *popt), label='fit')
         plt.title(r'$log(\tau)$ vs. log(Lattice size)')
         plt.xlabel('log(Lattice size)')
         plt.ylabel(r'$log(\tau)$')
+        plt.legend()
+        plt.grid()
         plt.show()
 
 if __name__=='__main__':
