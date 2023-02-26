@@ -486,11 +486,11 @@ def chiphasetrans():
 ###### susceptibility and spesific heat
 
 def criticalEx():
-    beta_arr = np.linspace(0, 1, 40)
+    beta_arr = np.linspace(0, 1, 70)
 
     n1 = 10
-    n2 = 20
-    n3 = 60
+    n2 = 30
+    n3 = 50
 
     init_random = np.random.random((n1, n1))
     init_spin1 = np.zeros((n1, n1))
@@ -530,19 +530,19 @@ def criticalEx():
     
     for i in tqdm(range(len(speH1))):
         totspin1, totenergy1, totspinnob1, totenergynob1, sus1 = metropolis(init_spin1, iter, burn, j, h, beta_arr[i], energy1)
-        #suscep1[i], suscep1_err[i] = susceptibility(totspin1,beta_arr[i],n1) 
+        suscep1[i], suscep1_err[i] = susceptibility(totspin1,beta_arr[i],n1) 
         speH1[i],speH1_err[i] = spesificHeat(totenergy1,beta_arr[i],n1) 
 
     
     for i in tqdm(range(len(speH2))):
         totspin2, totenergy2, totspinnob2, totenergynob2, sus2 = metropolis(init_spin2, iter, burn, j, h, beta_arr[i], energy2)
-        #suscep2[i], suscep2_err[i] = susceptibility(totspin2,beta_arr[i],n2) 
+        suscep2[i], suscep2_err[i] = susceptibility(totspin2,beta_arr[i],n2) 
         speH2[i],speH2_err[i] = spesificHeat(totenergy2,beta_arr[i],n2)  
     
 
     for i in tqdm(range(len(speH3))):
         totspin3, totenergy3, totspinnob3, totenergynob3, sus3 = metropolis(init_spin3, iter, burn, j, h, beta_arr[i], energy3)
-        #suscep3[i], suscep3_err[i] = susceptibility(totspin3,beta_arr[i],n3) 
+        suscep3[i], suscep3_err[i] = susceptibility(totspin3,beta_arr[i],n3) 
         speH3[i],speH3_err[i] = spesificHeat(totenergy3,beta_arr[i],n3) 
 
 ###### analytical spesific heat
@@ -563,20 +563,19 @@ def criticalEx():
     plt.errorbar(beta_arr, speH3, speH3_err, fmt='.', capthick=1, label=f'N = {n3}')
     plt.plot(betaan, Heatan, label='Analytical')
     plt.xlabel(r'Inverse Temperature ($\beta$)')
-    plt.ylabel(r'spesific Heat C')
-    plt.title('spesific Heat vs. Inverse Temperature')
+    plt.ylabel(r'Specific Heat (C)')
+    plt.title('Specific Heat vs. Inverse Temperature')
     plt.legend(loc='upper left')
     plt.show()
-    '''
+    
     plt.errorbar(beta_arr, suscep1, suscep1_err, fmt='.', capthick=1, label=f'N = {n1}')
     plt.errorbar(beta_arr, suscep2, suscep2_err, fmt='.', capthick=1, label=f'N = {n2}')
     plt.errorbar(beta_arr, suscep3, suscep3_err, fmt='.', capthick=1, label=f'N = {n3}')
     plt.xlabel(r'Inverse Temperature ($\beta$)')
-    plt.ylabel(r'susceptibility')
-    plt.title('magnetic Susceptibility vs. Inverse Temperature')
+    plt.ylabel(r'Susceptibility')
+    plt.title('Magnetic Susceptibility vs. Inverse Temperature')
     plt.legend(loc='upper left')
     plt.show()
-    '''
 #############################################
 
 
@@ -633,6 +632,6 @@ if __name__ == '__main__':
     #algobehave()
     #magphasetrans()
     #chiphasetrans()
-    criticalEx()
+    #criticalEx()
     #dyncritexp()
     pass
