@@ -192,36 +192,6 @@ def spesificHeat(data,beta,n_spin,Nbst=1000):
         
     return np.mean(sampleMeans), np.std(sampleMeans)    
 
-
-def susceptibility(data,beta,n_spin,Nbst=1000):
-    Nconf = data.shape
-    sampleMeans = np.zeros(Nbst)
-    
-    for k in range(Nbst):
-        idx = np.random.randint(0,Nconf,size=Nconf)
-        
-        sample = data[idx]
-        
-        sampleMeans[k] = (beta * ( np.mean(sample**2) - np.mean(sample)**2 )) / (n_spin**2)
-        
-    return np.mean(sampleMeans), np.std(sampleMeans)
-
-
-def spesificHeat(data,beta,n_spin,Nbst=1000):
-     
-    Nconf = data.shape
-    sampleMeans = np.zeros(Nbst)
-    
-    for k in range(Nbst):
-        idx = np.random.randint(0,Nconf,size=Nconf)
-        
-        sample = data[idx]
-        
-        sampleMeans[k] = (beta**2 * ( np.mean(sample**2) - np.mean(sample)**2 )) / (n_spin**2)
-        
-    return np.mean(sampleMeans), np.std(sampleMeans)    
-
-
 #################
 
 def test():
@@ -320,7 +290,7 @@ def dyncritexp():
         plt.grid()
         plt.show()
 
-
+# -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-
 
 # mag phase transition
 # -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-
@@ -357,8 +327,6 @@ def magphasetrans():
     netmag1_err = np.zeros(len(beta_arr))
     netmag2_err = np.zeros(len(beta_arr))
     netmag3_err = np.zeros(len(beta_arr))
-
-
            
     for i in tqdm(range(len(netmag1))):  
         totspin1, totenergy1 = worm(init_spin1, iter, burn, j, h, beta_arr[i], energy1)
@@ -423,11 +391,11 @@ def magphasetrans():
 ###### susceptibility and spesific heat
 
 def criticalEx():
-    beta_arr = np.linspace(0, 1, 100)
+    beta_arr = np.linspace(0, 1, 70)
 
     n1 = 10
-    n2 = 20
-    n3 = 60
+    n2 = 30
+    n3 = 50
 
     init_random = np.random.random((n1, n1))
     init_spin1 = np.zeros((n1, n1))
@@ -500,8 +468,8 @@ def criticalEx():
     plt.errorbar(beta_arr, speH3, speH3_err, fmt='.', capthick=1, label=f'N = {n3}')
     plt.plot(betaan, Heatan, label='Analytical')
     plt.xlabel(r'Inverse Temperature ($\beta$)')
-    plt.ylabel(r'spesific Heat C')
-    plt.title('spesific Heat vs. Inverse Temperature (worm)')
+    plt.ylabel(r'Specific Heat (C)')
+    plt.title('Specific Heat vs. Inverse Temperature (Worm)')
     plt.legend(loc='upper left')
     plt.show()
     
@@ -509,8 +477,8 @@ def criticalEx():
     plt.errorbar(beta_arr, suscep2, suscep2_err, fmt='.', capthick=1, label=f'N = {n2}')
     plt.errorbar(beta_arr, suscep3, suscep3_err, fmt='.', capthick=1, label=f'N = {n3}')
     plt.xlabel(r'Inverse Temperature ($\beta$)')
-    plt.ylabel(r'susceptibility ($\chi$)')
-    plt.title('magnetic Susceptibility vs. Inverse Temperature (worm)')
+    plt.ylabel(r'Susceptibility ($\chi$)')
+    plt.title('Magnetic Susceptibility vs. Inverse Temperature (Worm)')
     plt.legend(loc='upper left')
     plt.show()
     
@@ -528,6 +496,6 @@ if __name__=='__main__':
     #test()
     #algobehave()
     #dyncritexp()
-    magphasetrans()
+    #magphasetrans()
     criticalEx()
     pass
