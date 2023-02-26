@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from numba import njit
 from tqdm import tqdm
+from scipy import special
+from mpmath import mp
+from error_analysis import bootstrap
 
 # function to calculate energy in a toroidal geometry, i.e.,
 # lattice points on the boundary have lattice points from the opposite edges as neighbours
@@ -160,6 +163,67 @@ def spin_autocorr_time(spins):
 
     return tau
 
+
+def susceptibility(data,beta,n_spin,Nbst=1000):
+    Nconf = data.shape
+    sampleMeans = np.zeros(Nbst)
+    
+    for k in range(Nbst):
+        idx = np.random.randint(0,Nconf,size=Nconf)
+        
+        sample = data[idx]
+        
+        sampleMeans[k] = (beta * ( np.mean(sample**2) - np.mean(sample)**2 )) / (n_spin**2)
+        
+    return np.mean(sampleMeans), np.std(sampleMeans)
+
+
+def spesificHeat(data,beta,n_spin,Nbst=1000):
+     
+    Nconf = data.shape
+    sampleMeans = np.zeros(Nbst)
+    
+    for k in range(Nbst):
+        idx = np.random.randint(0,Nconf,size=Nconf)
+        
+        sample = data[idx]
+        
+        sampleMeans[k] = (beta**2 * ( np.mean(sample**2) - np.mean(sample)**2 )) / (n_spin**2)
+        
+    return np.mean(sampleMeans), np.std(sampleMeans)    
+
+
+def susceptibility(data,beta,n_spin,Nbst=1000):
+    Nconf = data.shape
+    sampleMeans = np.zeros(Nbst)
+    
+    for k in range(Nbst):
+        idx = np.random.randint(0,Nconf,size=Nconf)
+        
+        sample = data[idx]
+        
+        sampleMeans[k] = (beta * ( np.mean(sample**2) - np.mean(sample)**2 )) / (n_spin**2)
+        
+    return np.mean(sampleMeans), np.std(sampleMeans)
+
+
+def spesificHeat(data,beta,n_spin,Nbst=1000):
+     
+    Nconf = data.shape
+    sampleMeans = np.zeros(Nbst)
+    
+    for k in range(Nbst):
+        idx = np.random.randint(0,Nconf,size=Nconf)
+        
+        sample = data[idx]
+        
+        sampleMeans[k] = (beta**2 * ( np.mean(sample**2) - np.mean(sample)**2 )) / (n_spin**2)
+        
+    return np.mean(sampleMeans), np.std(sampleMeans)    
+
+
+#################
+
 def test():
     latsize = 20
 
@@ -256,14 +320,214 @@ def dyncritexp():
         plt.grid()
         plt.show()
 
+
+
+# mag phase transition
+# -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-
+def magphasetrans():
+    beta_arr = np.linspace(0, 1, 70)
+
+    n1 = 30
+    n2 = 50
+    n3 = 70
+
+    init_random = np.random.random((n1, n1))
+    init_spin1 = np.zeros((n1, n1))
+    init_spin1[init_random >= .8] = -1
+    init_spin1[init_random < .8] = 1
+
+    init_random = np.random.random((n2, n2))
+    init_spin2 = np.zeros((n2, n2))
+    init_spin2[init_random >= .8] = -1
+    init_spin2[init_random < .8] = 1
+
+    init_random = np.random.random((n3, n3))
+    init_spin3 = np.zeros((n3, n3))
+    init_spin3[init_random >= .8] = -1
+    init_spin3[init_random < .8] = 1
+
+    energy1 = energy_toroid(init_spin1, j, h)
+    energy2 = energy_toroid(init_spin2, j, h)
+    energy3 = energy_toroid(init_spin3, j, h)
+
+    netmag1 = np.zeros(len(beta_arr))
+    netmag2 = np.zeros(len(beta_arr))
+    netmag3 = np.zeros(len(beta_arr))
+
+    netmag1_err = np.zeros(len(beta_arr))
+    netmag2_err = np.zeros(len(beta_arr))
+    netmag3_err = np.zeros(len(beta_arr))
+
+
+           
+    for i in tqdm(range(len(netmag1))):  
+        totspin1, totenergy1 = worm(init_spin1, iter, burn, j, h, beta_arr[i], energy1)
+        #netmag1[i] = np.average(totspin1)/(n1*n1)
+        # error_calculation bootstrap
+        totspin1_mean, totspin1_err = bootstrap(totspin1,num_bs)
+        netmag1[i] = totspin1_mean/(n1*n1)
+        netmag1_err[i] = totspin1_err/(n1*n1)
+         
+    for i in tqdm(range(len(netmag2))):
+        totspin2, totenergy2 = worm(init_spin2, iter, burn, j, h, beta_arr[i], energy2)
+        #netmag2[i] = np.average(totspin2)/(n2*n2)
+        totspin2_mean, totspin2_err = bootstrap(totspin2,num_bs)
+        netmag2[i] = totspin2_mean/(n2*n2)
+        netmag2_err[i] = totspin2_err/(n2*n2)
+
+    for i in tqdm(range(len(netmag3))):
+        totspin3, totenergy3 = worm(init_spin3, iter, burn, j, h, beta_arr[i], energy3)
+        #netmag3[i] = np.average(totspin3)/(n3*n3)
+        totspin3_mean, totspin3_err = bootstrap(totspin3,num_bs)
+        netmag3[i] = totspin3_mean/(n3*n3)
+        netmag3_err[i] = totspin3_err/(n3*n3)
+    
+    # critcal coupling J_c
+    J_c = (1/2) * np.log(1 + np.sqrt(2))
+
+    # abs magnetization per site with h=0 in thermodynamic limit
+    def abs_mag(J):
+        if J > J_c:
+            return (1 - (1/np.sinh(2*J)**4))**(1/8)
+        else:
+            return 0
+
+    def K(m):
+        return special.ellipk(m)
+
+    # energy per site with h=0
+    def e(J,m):
+        return - J * mp.coth(2*J) * ( 1 + (2/np.pi)*(2*np.tanh(2*J)**2 - 1)*K(4*mp.sech(2*J)**2 * np.tanh(2*J)**2)) 
+
+    betaan = np.linspace(0.01, 1, 50)
+    energyan = np.zeros(len(betaan))
+    magan = np.zeros(len(betaan))
+    # loop over J and calculate energy and abs_magnetization
+    for i in range(len(betaan)):
+        m = abs_mag(betaan[i]) 
+        magan[i] = m
+        energyan[i] = e(betaan[i],m)
+
+    #plot the results
+    plt.errorbar(beta_arr, netmag1, netmag1_err, fmt='.', capthick=1, label=f'N = {n1}')
+    plt.errorbar(beta_arr, netmag2, netmag2_err, fmt='.', capthick=1, label=f'N = {n2}')
+    plt.errorbar(beta_arr, netmag3, netmag3_err, fmt='.', capthick=1, label=f'N = {n3}')
+    plt.plot(betaan, magan, label='Analytical')
+    plt.xlabel(r'Inverse Temperature ($\beta$)')
+    plt.ylabel(r'Net Magnetisation (<M>) [J = 1]')
+    plt.title('Net Magnetisation vs. Inverse Temperature (worm algorithm)')
+    plt.legend(loc='upper left')
+    plt.show()
+# -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-
+
+###### susceptibility and spesific heat
+
+def criticalEx():
+    beta_arr = np.linspace(0, 1, 100)
+
+    n1 = 10
+    n2 = 20
+    n3 = 60
+
+    init_random = np.random.random((n1, n1))
+    init_spin1 = np.zeros((n1, n1))
+    init_spin1[init_random >= .8] = 1
+    init_spin1[init_random < .8] = -1
+
+    init_random = np.random.random((n2, n2))
+    init_spin2 = np.zeros((n2, n2))
+    init_spin2[init_random >= .8] = 1
+    init_spin2[init_random < .8] = -1
+
+    init_random = np.random.random((n3, n3))
+    init_spin3 = np.zeros((n3, n3))
+    init_spin3[init_random >= .8] = 1
+    init_spin3[init_random < .8] = -1
+
+    energy1 = energy_toroid(init_spin1, j, h)
+    energy2 = energy_toroid(init_spin2, j, h)
+    energy3 = energy_toroid(init_spin3, j, h)
+
+    suscep1 = np.zeros(len(beta_arr))
+    suscep2 = np.zeros(len(beta_arr))
+    suscep3 = np.zeros(len(beta_arr))
+
+    suscep1_err = np.zeros(len(beta_arr))
+    suscep2_err = np.zeros(len(beta_arr))
+    suscep3_err = np.zeros(len(beta_arr))
+
+    speH1 = np.zeros(len(beta_arr))
+    speH2 = np.zeros(len(beta_arr))
+    speH3 = np.zeros(len(beta_arr))
+
+    speH1_err = np.zeros(len(beta_arr))
+    speH2_err = np.zeros(len(beta_arr))
+    speH3_err = np.zeros(len(beta_arr))
+
+    
+    for i in tqdm(range(len(speH1))):
+        totspin1, totenergy1 = worm(init_spin1, iter, burn, j, h, beta_arr[i], energy1)
+        suscep1[i], suscep1_err[i] = susceptibility(totspin1,beta_arr[i],n1) 
+        speH1[i],speH1_err[i] = spesificHeat(totenergy1,beta_arr[i],n1) 
+
+    
+    for i in tqdm(range(len(speH2))):
+        totspin2, totenergy2 = worm(init_spin2, iter, burn, j, h, beta_arr[i], energy2)
+        suscep2[i], suscep2_err[i] = susceptibility(totspin2,beta_arr[i],n2) 
+        speH2[i],speH2_err[i] = spesificHeat(totenergy2,beta_arr[i],n2)  
+    
+
+    for i in tqdm(range(len(speH3))):
+        totspin3, totenergy3 = worm(init_spin3, iter, burn, j, h, beta_arr[i], energy3)
+        suscep3[i], suscep3_err[i] = susceptibility(totspin3,beta_arr[i],n3) 
+        speH3[i],speH3_err[i] = spesificHeat(totenergy3,beta_arr[i],n3) 
+
+###### analytical spesific heat
+    def specificHeat_exact(J):
+        k = ( 2*np.sinh(2*J) / np.cosh(2*J)**2 )
+        return (4*J**2/(np.pi*np.tanh(2*J)**2)) * ( special.ellipkinc(np.pi/2,k**2) - special.ellipeinc(np.pi/2,k**2) - (1-np.tanh(2*J)**2)*((np.pi/2)+(2*np.tanh(2*J)**2-1)*special.ellipkinc(np.pi/2,k**2)) )   
+        
+
+    betaan = np.linspace(0.01, 1, 50)
+    Heatan = np.zeros(len(betaan))
+    # loop over J and calculate specific heat
+    for i in range(len(betaan)):
+        Heatan[i] = specificHeat_exact(betaan[i]) 
+
+    #plot the results
+    plt.errorbar(beta_arr, speH1, speH1_err, fmt='.', capthick=1, label=f'N = {n1}')
+    plt.errorbar(beta_arr, speH2, speH2_err, fmt='.', capthick=1, label=f'N = {n2}')
+    plt.errorbar(beta_arr, speH3, speH3_err, fmt='.', capthick=1, label=f'N = {n3}')
+    plt.plot(betaan, Heatan, label='Analytical')
+    plt.xlabel(r'Inverse Temperature ($\beta$)')
+    plt.ylabel(r'spesific Heat C')
+    plt.title('spesific Heat vs. Inverse Temperature (worm)')
+    plt.legend(loc='upper left')
+    plt.show()
+    
+    plt.errorbar(beta_arr, suscep1, suscep1_err, fmt='.', capthick=1, label=f'N = {n1}')
+    plt.errorbar(beta_arr, suscep2, suscep2_err, fmt='.', capthick=1, label=f'N = {n2}')
+    plt.errorbar(beta_arr, suscep3, suscep3_err, fmt='.', capthick=1, label=f'N = {n3}')
+    plt.xlabel(r'Inverse Temperature ($\beta$)')
+    plt.ylabel(r'susceptibility ($\chi$)')
+    plt.title('magnetic Susceptibility vs. Inverse Temperature (worm)')
+    plt.legend(loc='upper left')
+    plt.show()
+    
+#############################################
+
+
 iter = 100000
 burn = 30000
 j = 1
 h = 0
 beta = 1
+num_bs = 10000 # number of bootstrap samples
 
 if __name__=='__main__':
     #test()
     #algobehave()
     #dyncritexp()
+    magphasetrans()
+    criticalEx()
     pass
