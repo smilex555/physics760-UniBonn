@@ -401,7 +401,7 @@ def magphasetrans():
 
     # energy per site with h=0
     def e(J,m):
-        return - J * mp.coth(2*J) * ( 1 + (2/np.pi)*(2*np.tanh(2*J)**2 - 1)*K(4*mp.sech(2*J)**2 * np.tanh(2*J)**2)) 
+        return - J * mp.coth(2*J) * ( 1 + (2/np.pi)*(2*np.tanh(2*J)**2 - 1)*K(m)*(4*mp.sech(2*J)**2 * np.tanh(2*J)**2)) 
 
     betaan = np.linspace(0.01, 1, 50)
     energyan = np.zeros(len(betaan))

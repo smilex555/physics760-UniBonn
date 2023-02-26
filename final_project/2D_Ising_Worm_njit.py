@@ -297,9 +297,9 @@ def dyncritexp():
 def magphasetrans():
     beta_arr = np.linspace(0, 1, 70)
 
-    n1 = 30
-    n2 = 50
-    n3 = 70
+    n1 = 20
+    n2 = 40
+    n3 = 60
 
     init_random = np.random.random((n1, n1))
     init_spin1 = np.zeros((n1, n1))
@@ -365,7 +365,7 @@ def magphasetrans():
 
     # energy per site with h=0
     def e(J,m):
-        return - J * mp.coth(2*J) * ( 1 + (2/np.pi)*(2*np.tanh(2*J)**2 - 1)*K(4*mp.sech(2*J)**2 * np.tanh(2*J)**2)) 
+        return - J * mp.coth(2*J) * ( 1 + (2/np.pi)*(2*np.tanh(2*J)**2 - 1)*K(m)*(4*mp.sech(2*J)**2 * np.tanh(2*J)**2)) 
 
     betaan = np.linspace(0.01, 1, 50)
     energyan = np.zeros(len(betaan))
@@ -490,12 +490,12 @@ burn = 30000
 j = 1
 h = 0
 beta = 1
-num_bs = 10000 # number of bootstrap samples
+num_bs = 2000 # number of bootstrap samples
 
 if __name__=='__main__':
     #test()
     #algobehave()
     #dyncritexp()
-    #magphasetrans()
-    criticalEx()
+    magphasetrans()
+    #criticalEx()
     pass
