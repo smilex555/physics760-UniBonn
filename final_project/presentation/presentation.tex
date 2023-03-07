@@ -1,0 +1,57 @@
+\documentclass{beamer}
+\usetheme{Darmstadt}
+\AtBeginSection[]
+{
+\begin{frame}
+    \frametitle{Presentation Outline}
+    \tableofcontents[currentsection]
+\end{frame}
+}
+\addtobeamertemplate{navigation symbols}{}
+{
+\hspace{1em}
+\usebeamerfont{footline}%
+\insertframenumber / \inserttotalframenumber
+}
+\setbeamertemplate{caption}[numbered]
+
+\usepackage{graphicx}
+\graphicspath{{../report/}}
+\usepackage{amsmath}
+\usepackage{adjustbox}
+\usepackage[style=phys, backend=biber]{biblatex}
+\renewcommand*{\bibfont}{\scriptsize}
+\addbibresource{ref.bib}
+\usepackage{caption}
+\captionsetup{font=scriptsize}
+\usepackage{tcolorbox}
+
+\title{The Worm Algorithm}
+\subtitle{physics760: Computational Physics\\Final Project}
+\author{Ajay S. Sakthivasan \and Dongjin Suh}
+\institute{Universität Bonn}
+
+\date{March 15, 2023}
+
+\begin{document}
+
+\begin{frame}
+    \titlepage
+\end{frame}
+
+\begin{frame}
+    \frametitle{Presentation Outline}
+    \tableofcontents
+\end{frame}
+
+\section{Introduction}
+
+\section{Theoretical Basis}
+
+\section{Methodology}
+
+\section{Results}
+
+\section{Discussion}
+
+\end{document}
