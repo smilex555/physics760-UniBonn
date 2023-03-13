@@ -69,7 +69,7 @@ def justburn(spin_config, burnin, J, h, beta, energy):
 
 @njit(nogil=True)
 def worm(spin_config, iterations, burnin, J, h, beta, energy):
-    if beta >= 0.4:
+    if beta >= 0.: #cut-off
         N = len(spin_config)
         tot_spins = np.zeros(iterations)
         tot_energy = np.zeros(iterations)
@@ -99,6 +99,7 @@ def worm(spin_config, iterations, burnin, J, h, beta, energy):
                         index = np.where((worm[:, 0] == codi[0, 0])*(worm[:, 1] == codi[0, 1]))[0]
                         if index[0] == len(worm) - 2:
                             x, y = worm[index[0]][0], worm[index[0]][1]
+                            #   worm = worm[:-1]
                         else:
                             if np.random.random() < 0.5:
                                 x, y = worm[index[0] - 1][0], worm[index[0] - 1][1]
@@ -570,15 +571,15 @@ def criticalEx():
 
 iter = 100000
 burn = 30000
-j = 0
+j = 1
 h = 0
 beta = 1
 num_bs = 2000 # number of bootstrap samples
 
 if __name__=='__main__':
     #test()
-    #algobehave()
+    algobehave()
     #dyncritexp()
-    magphasetrans()
+    #magphasetrans()
     #criticalEx()
     pass
