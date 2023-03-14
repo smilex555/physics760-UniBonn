@@ -22,6 +22,7 @@
 \usepackage[style=phys, backend=biber]{biblatex}
 \renewcommand*{\bibfont}{\scriptsize}
 \addbibresource{ref.bib}
+\nocite{*}
 \usepackage{caption}
 \captionsetup{font=scriptsize}
 \usepackage{tcolorbox}
@@ -425,33 +426,48 @@ Partition function:
 
 \section{Discussion}
 \begin{frame}{Discussion}
-    Algorithm behaviour:
-    \begin{itemize}
-        \item Less time to reach the thermal equilibrium for WA
-    \end{itemize}
-    Comparing the dynamical exponents:
-    \begin{itemize}
-        \item 
-    \end{itemize}
-    Net magnetisation:
-    \begin{itemize}
-        \item the behaviour improves with lattice size.
-        \item but still not exact match to the analytical solution, especially for higher area of the inverse temperature
-    \end{itemize}
+\begin{itemize}
+    \item The algorithm is functional to the extent that the results are not unreasonable.
+    \item The dynamical critical exponent was reduced with WA, but still higher than the original work.
+    \item In the original implementation, the dynamical exponent was reported as $0.25$.
+    \item We believe this is mainly due to our decision to kill the worm and using a Metropolis-like check.
+    \item However, this hypothesis needs to tested (maybe in the future).
+    \item It should also be noted that lattice sizes up to $512$ were considered in the original work.
+    \item Asymptotic result $\implies$ we might get a better result if we simulate larger lattices.
+\end{itemize}
 \end{frame}
-\begin{frame}{Discussion}
-    susceptibility and specific heat:
-    \begin{itemize}
-        \item effect of the net magnetisation result to susceptibility \\
-        (and energy $\longrightarrow$ specific heat)
-        \item problem of normalisation, peak value too high
-        \item no reasonable behaviour at critical area
-        \item No continuous course after reaching the peak at critical point 
-    \end{itemize}
+
+\begin{frame}
+\begin{itemize}
+    \item When it comes to physical observables, the plots showed critical behaviour.
+    \item However, they were not exact compared to analytic results.
+    \item There is also an issue of normalisation, which, for some reason, proved to be very elusive in the case of WA.
+    \item Primary goal for future work, replace with the variation in the original work.
+    \item Measure observables using bond configurations.
+    \item This should further improve our results.
+    \item 3D Ising was not studied due to time constraints.
+    \item Another course of work – Implement the algorithm for 3D Ising model.
+\end{itemize}
+\end{frame}
+
+\section{Summary}
+\begin{frame}{Summary}
+\begin{itemize}
+    \item To summarise, we studied the worm algorithm in this project.
+    \item This was then used to simulate the 2D Ising model.
+    \item Various observables and the dynamical critical exponent were calculated.
+    \item The corresponding results were then compared with Metropolis algorithm.
+    \item Shortcomings and problems with the implementation were realised, and possible solutions are suggested.
+    \item Things that were left out due to time constraints could be studied in the near future.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\centering
+Thanks for your time!
 \end{frame}
 
 \begin{frame}[allowframebreaks]{References}
-    \nocite{*}
     \printbibliography
 \end{frame}
 
